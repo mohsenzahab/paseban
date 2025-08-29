@@ -78,7 +78,8 @@ extension PostPolicyToCompanion on PostPolicy {
     }
     ;
     return PostPoliciesTableCompanion(
-      id: id == null ? const Value.absent() : Value(id!),
+      id: Value.absentIfNull(id),
+      soldierId: Value.absentIfNull(soldierId),
       priority: Value(priority.index),
       type: Value(runtimeType.toString()),
       data: Value.absentIfNull(map == null ? null : jsonEncode(map)),
@@ -94,6 +95,7 @@ extension PostPolicyFromDb on PostPoliciesTableData {
       case 'Leave':
         return Leave(
           id: id,
+          soldierId: soldierId,
           value: DateTimeRange(
             start: DateTime.parse(map['start']),
             end: DateTime.parse(map['end']),
@@ -104,6 +106,7 @@ extension PostPolicyFromDb on PostPoliciesTableData {
       case 'FriendSoldiers':
         return FriendSoldiers(
           id: id,
+          soldierId: soldierId,
           value: List<int>.from(map['ids']),
           priority: Priority.values[priority],
         );
@@ -111,6 +114,7 @@ extension PostPolicyFromDb on PostPoliciesTableData {
       case 'WeekOffDays':
         return WeekOffDays(
           id: id,
+          soldierId: soldierId,
           value: (map['days'] as List)
               .map((e) => Weekday.values[e as int])
               .toList(),
@@ -120,19 +124,29 @@ extension PostPolicyFromDb on PostPoliciesTableData {
       case 'NoNightNNight':
         return NoNightNNight(
           id: id,
+          soldierId: soldierId,
           value: map['count'],
           priority: Priority.values[priority],
         );
 
       case 'NoNight1Night':
-        return NoNight1Night(id: id, priority: Priority.values[priority]);
+        return NoNight1Night(
+          id: id,
+          soldierId: soldierId,
+          priority: Priority.values[priority],
+        );
 
       case 'NoNight2Night':
-        return NoNight2Night(id: id, priority: Priority.values[priority]);
+        return NoNight2Night(
+          id: id,
+          soldierId: soldierId,
+          priority: Priority.values[priority],
+        );
 
       case 'MinPostCount':
         return MinPostCount(
           id: id,
+          soldierId: soldierId,
           value: map['value'],
           priority: Priority.values[priority],
           stagePriority: (map['stagePriority'] as Map<String, dynamic>?)?.map(
@@ -144,6 +158,7 @@ extension PostPolicyFromDb on PostPoliciesTableData {
       case 'MaxPostCount':
         return MaxPostCount(
           id: id,
+          soldierId: soldierId,
           value: map['value'],
           priority: Priority.values[priority],
           stagePriority: (map['stagePriority'] as Map<String, dynamic>?)?.map(
@@ -155,6 +170,7 @@ extension PostPolicyFromDb on PostPoliciesTableData {
       case 'NoWeekendPerMonth':
         return NoWeekendPerMonth(
           id: id,
+          soldierId: soldierId,
           value: map['value'],
           priority: Priority.values[priority],
           stagePriority: (map['stagePriority'] as Map<String, dynamic>?)?.map(

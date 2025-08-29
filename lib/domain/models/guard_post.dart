@@ -3,7 +3,6 @@ import 'weekday.dart';
 
 class GuardPost {
   final int? id;
-  final int soldierId;
   final String title; // عنوان پست (مثلا برجک شمالی)
   final List<Weekday>? weekDays; // روزهای هفته (۱=شنبه ... ۷=جمعه)
   final int repeat;
@@ -13,7 +12,6 @@ class GuardPost {
 
   GuardPost({
     this.id,
-    required this.soldierId,
     required this.title,
     this.weekDays,
     this.monthDays,

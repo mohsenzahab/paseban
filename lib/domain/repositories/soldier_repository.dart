@@ -7,8 +7,11 @@ class SoldierRepository {
 
   SoldierRepository(this.db);
 
-  Future<int> insert(Soldier soldier) {
-    return db.into(db.soldiersTable).insert(soldier.toCompanion());
+  Future<Soldier?> insert(Soldier soldier) {
+    return db
+        .into(db.soldiersTable)
+        .insertReturningOrNull(soldier.toCompanion())
+        .then((value) => value?.toDomain());
   }
 
   Future<List<Soldier>> getAll() async {

@@ -186,3 +186,5 @@ enum PostPolicyType {
   equalHolidayPost,
   equalPostDifficulty,
 }
+
+enum EditType { manual, auto }

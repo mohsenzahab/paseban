@@ -6,7 +6,6 @@ import 'converters.dart';
 
 class GuardPostsTable extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get soldierId => integer()();
   TextColumn get title => text()();
 
   TextColumn get weekDays =>

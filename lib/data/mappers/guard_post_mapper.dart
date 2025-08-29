@@ -7,7 +7,6 @@ extension GuardPostToCompanion on GuardPost {
   GuardPostsTableCompanion toCompanion() {
     return GuardPostsTableCompanion(
       id: id == null ? const Value.absent() : Value(id!),
-
       title: Value(title),
       difficulty: Value(difficulty),
 

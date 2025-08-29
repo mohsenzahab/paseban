@@ -83,12 +83,41 @@ class Soldier {
     return result;
   }
 
+  Map<String, dynamic> toFormValues() {
+    final result = <String, dynamic>{};
+
+    if (id != null) {
+      result.addAll({'id': id});
+    }
+    result.addAll({'firstName': firstName});
+    result.addAll({'lastName': lastName});
+    result.addAll({'rank': rank.index});
+    result.addAll({'dateOfEnlistment': dateOfEnlistment});
+    if (nikName != null) {
+      result.addAll({'nikName': nikName});
+    }
+    if (imageUrl != null) {
+      result.addAll({'imageUrl': imageUrl});
+    }
+    if (militaryId != null) {
+      result.addAll({'militaryId': militaryId});
+    }
+    if (phoneNumber != null) {
+      result.addAll({'phoneNumber': phoneNumber});
+    }
+    if (dateOfBirth != null) {
+      result.addAll({'dateOfBirth': dateOfBirth!});
+    }
+
+    return result;
+  }
+
   factory Soldier.fromMap(Map<String, dynamic> map) {
     return Soldier(
       id: map['id']?.toInt(),
       firstName: map['firstName'] ?? '',
       lastName: map['lastName'] ?? '',
-      rank: MilitaryRank.values.firstWhere(map['rank']),
+      rank: MilitaryRank.values[map['rank']],
       dateOfEnlistment: DateTime.fromMillisecondsSinceEpoch(
         map['dateOfEnlistment'],
       ),

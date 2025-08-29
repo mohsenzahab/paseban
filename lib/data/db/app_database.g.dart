@@ -649,17 +649,6 @@ class $GuardPostsTableTable extends GuardPostsTable
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
-  static const VerificationMeta _soldierIdMeta = const VerificationMeta(
-    'soldierId',
-  );
-  @override
-  late final GeneratedColumn<int> soldierId = GeneratedColumn<int>(
-    'soldier_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
@@ -725,7 +714,6 @@ class $GuardPostsTableTable extends GuardPostsTable
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    soldierId,
     title,
     weekDays,
     repeat,
@@ -747,14 +735,6 @@ class $GuardPostsTableTable extends GuardPostsTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('soldier_id')) {
-      context.handle(
-        _soldierIdMeta,
-        soldierId.isAcceptableOrUnknown(data['soldier_id']!, _soldierIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_soldierIdMeta);
     }
     if (data.containsKey('title')) {
       context.handle(
@@ -793,10 +773,6 @@ class $GuardPostsTableTable extends GuardPostsTable
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
-      )!,
-      soldierId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}soldier_id'],
       )!,
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -853,7 +829,6 @@ class $GuardPostsTableTable extends GuardPostsTable
 class GuardPostsTableData extends DataClass
     implements Insertable<GuardPostsTableData> {
   final int id;
-  final int soldierId;
   final String title;
   final List<Weekday>? weekDays;
   final int repeat;
@@ -862,7 +837,6 @@ class GuardPostsTableData extends DataClass
   final int shiftsPerDay;
   const GuardPostsTableData({
     required this.id,
-    required this.soldierId,
     required this.title,
     this.weekDays,
     required this.repeat,
@@ -874,7 +848,6 @@ class GuardPostsTableData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['soldier_id'] = Variable<int>(soldierId);
     map['title'] = Variable<String>(title);
     if (!nullToAbsent || weekDays != null) {
       map['week_days'] = Variable<String>(
@@ -899,7 +872,6 @@ class GuardPostsTableData extends DataClass
   GuardPostsTableCompanion toCompanion(bool nullToAbsent) {
     return GuardPostsTableCompanion(
       id: Value(id),
-      soldierId: Value(soldierId),
       title: Value(title),
       weekDays: weekDays == null && nullToAbsent
           ? const Value.absent()
@@ -920,7 +892,6 @@ class GuardPostsTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GuardPostsTableData(
       id: serializer.fromJson<int>(json['id']),
-      soldierId: serializer.fromJson<int>(json['soldierId']),
       title: serializer.fromJson<String>(json['title']),
       weekDays: serializer.fromJson<List<Weekday>?>(json['weekDays']),
       repeat: serializer.fromJson<int>(json['repeat']),
@@ -936,7 +907,6 @@ class GuardPostsTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'soldierId': serializer.toJson<int>(soldierId),
       'title': serializer.toJson<String>(title),
       'weekDays': serializer.toJson<List<Weekday>?>(weekDays),
       'repeat': serializer.toJson<int>(repeat),
@@ -950,7 +920,6 @@ class GuardPostsTableData extends DataClass
 
   GuardPostsTableData copyWith({
     int? id,
-    int? soldierId,
     String? title,
     Value<List<Weekday>?> weekDays = const Value.absent(),
     int? repeat,
@@ -959,7 +928,6 @@ class GuardPostsTableData extends DataClass
     int? shiftsPerDay,
   }) => GuardPostsTableData(
     id: id ?? this.id,
-    soldierId: soldierId ?? this.soldierId,
     title: title ?? this.title,
     weekDays: weekDays.present ? weekDays.value : this.weekDays,
     repeat: repeat ?? this.repeat,
@@ -970,7 +938,6 @@ class GuardPostsTableData extends DataClass
   GuardPostsTableData copyWithCompanion(GuardPostsTableCompanion data) {
     return GuardPostsTableData(
       id: data.id.present ? data.id.value : this.id,
-      soldierId: data.soldierId.present ? data.soldierId.value : this.soldierId,
       title: data.title.present ? data.title.value : this.title,
       weekDays: data.weekDays.present ? data.weekDays.value : this.weekDays,
       repeat: data.repeat.present ? data.repeat.value : this.repeat,
@@ -988,7 +955,6 @@ class GuardPostsTableData extends DataClass
   String toString() {
     return (StringBuffer('GuardPostsTableData(')
           ..write('id: $id, ')
-          ..write('soldierId: $soldierId, ')
           ..write('title: $title, ')
           ..write('weekDays: $weekDays, ')
           ..write('repeat: $repeat, ')
@@ -1002,7 +968,6 @@ class GuardPostsTableData extends DataClass
   @override
   int get hashCode => Object.hash(
     id,
-    soldierId,
     title,
     weekDays,
     repeat,
@@ -1015,7 +980,6 @@ class GuardPostsTableData extends DataClass
       identical(this, other) ||
       (other is GuardPostsTableData &&
           other.id == this.id &&
-          other.soldierId == this.soldierId &&
           other.title == this.title &&
           other.weekDays == this.weekDays &&
           other.repeat == this.repeat &&
@@ -1026,7 +990,6 @@ class GuardPostsTableData extends DataClass
 
 class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
   final Value<int> id;
-  final Value<int> soldierId;
   final Value<String> title;
   final Value<List<Weekday>?> weekDays;
   final Value<int> repeat;
@@ -1035,7 +998,6 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
   final Value<int> shiftsPerDay;
   const GuardPostsTableCompanion({
     this.id = const Value.absent(),
-    this.soldierId = const Value.absent(),
     this.title = const Value.absent(),
     this.weekDays = const Value.absent(),
     this.repeat = const Value.absent(),
@@ -1045,20 +1007,17 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
   });
   GuardPostsTableCompanion.insert({
     this.id = const Value.absent(),
-    required int soldierId,
     required String title,
     this.weekDays = const Value.absent(),
     this.repeat = const Value.absent(),
     this.monthDays = const Value.absent(),
     required GuardPostDifficulty difficulty,
     required int shiftsPerDay,
-  }) : soldierId = Value(soldierId),
-       title = Value(title),
+  }) : title = Value(title),
        difficulty = Value(difficulty),
        shiftsPerDay = Value(shiftsPerDay);
   static Insertable<GuardPostsTableData> custom({
     Expression<int>? id,
-    Expression<int>? soldierId,
     Expression<String>? title,
     Expression<String>? weekDays,
     Expression<int>? repeat,
@@ -1068,7 +1027,6 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (soldierId != null) 'soldier_id': soldierId,
       if (title != null) 'title': title,
       if (weekDays != null) 'week_days': weekDays,
       if (repeat != null) 'repeat': repeat,
@@ -1080,7 +1038,6 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
 
   GuardPostsTableCompanion copyWith({
     Value<int>? id,
-    Value<int>? soldierId,
     Value<String>? title,
     Value<List<Weekday>?>? weekDays,
     Value<int>? repeat,
@@ -1090,7 +1047,6 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
   }) {
     return GuardPostsTableCompanion(
       id: id ?? this.id,
-      soldierId: soldierId ?? this.soldierId,
       title: title ?? this.title,
       weekDays: weekDays ?? this.weekDays,
       repeat: repeat ?? this.repeat,
@@ -1105,9 +1061,6 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
-    }
-    if (soldierId.present) {
-      map['soldier_id'] = Variable<int>(soldierId.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -1140,7 +1093,6 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
   String toString() {
     return (StringBuffer('GuardPostsTableCompanion(')
           ..write('id: $id, ')
-          ..write('soldierId: $soldierId, ')
           ..write('title: $title, ')
           ..write('weekDays: $weekDays, ')
           ..write('repeat: $repeat, ')
@@ -1169,6 +1121,20 @@ class $PostPoliciesTableTable extends PostPoliciesTable
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _soldierIdMeta = const VerificationMeta(
+    'soldierId',
+  );
+  @override
+  late final GeneratedColumn<int> soldierId = GeneratedColumn<int>(
+    'soldier_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES soldiers_table (id) ON UPDATE CASCADE ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _priorityMeta = const VerificationMeta(
@@ -1201,7 +1167,7 @@ class $PostPoliciesTableTable extends PostPoliciesTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, priority, type, data];
+  List<GeneratedColumn> get $columns => [id, soldierId, priority, type, data];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1216,6 +1182,12 @@ class $PostPoliciesTableTable extends PostPoliciesTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('soldier_id')) {
+      context.handle(
+        _soldierIdMeta,
+        soldierId.isAcceptableOrUnknown(data['soldier_id']!, _soldierIdMeta),
+      );
     }
     if (data.containsKey('priority')) {
       context.handle(
@@ -1254,6 +1226,10 @@ class $PostPoliciesTableTable extends PostPoliciesTable
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      soldierId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}soldier_id'],
+      ),
       priority: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}priority'],
@@ -1278,11 +1254,13 @@ class $PostPoliciesTableTable extends PostPoliciesTable
 class PostPoliciesTableData extends DataClass
     implements Insertable<PostPoliciesTableData> {
   final int id;
+  final int? soldierId;
   final int priority;
   final String type;
   final String data;
   const PostPoliciesTableData({
     required this.id,
+    this.soldierId,
     required this.priority,
     required this.type,
     required this.data,
@@ -1291,6 +1269,9 @@ class PostPoliciesTableData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    if (!nullToAbsent || soldierId != null) {
+      map['soldier_id'] = Variable<int>(soldierId);
+    }
     map['priority'] = Variable<int>(priority);
     map['type'] = Variable<String>(type);
     map['data'] = Variable<String>(data);
@@ -1300,6 +1281,9 @@ class PostPoliciesTableData extends DataClass
   PostPoliciesTableCompanion toCompanion(bool nullToAbsent) {
     return PostPoliciesTableCompanion(
       id: Value(id),
+      soldierId: soldierId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(soldierId),
       priority: Value(priority),
       type: Value(type),
       data: Value(data),
@@ -1313,6 +1297,7 @@ class PostPoliciesTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PostPoliciesTableData(
       id: serializer.fromJson<int>(json['id']),
+      soldierId: serializer.fromJson<int?>(json['soldierId']),
       priority: serializer.fromJson<int>(json['priority']),
       type: serializer.fromJson<String>(json['type']),
       data: serializer.fromJson<String>(json['data']),
@@ -1323,6 +1308,7 @@ class PostPoliciesTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'soldierId': serializer.toJson<int?>(soldierId),
       'priority': serializer.toJson<int>(priority),
       'type': serializer.toJson<String>(type),
       'data': serializer.toJson<String>(data),
@@ -1331,11 +1317,13 @@ class PostPoliciesTableData extends DataClass
 
   PostPoliciesTableData copyWith({
     int? id,
+    Value<int?> soldierId = const Value.absent(),
     int? priority,
     String? type,
     String? data,
   }) => PostPoliciesTableData(
     id: id ?? this.id,
+    soldierId: soldierId.present ? soldierId.value : this.soldierId,
     priority: priority ?? this.priority,
     type: type ?? this.type,
     data: data ?? this.data,
@@ -1343,6 +1331,7 @@ class PostPoliciesTableData extends DataClass
   PostPoliciesTableData copyWithCompanion(PostPoliciesTableCompanion data) {
     return PostPoliciesTableData(
       id: data.id.present ? data.id.value : this.id,
+      soldierId: data.soldierId.present ? data.soldierId.value : this.soldierId,
       priority: data.priority.present ? data.priority.value : this.priority,
       type: data.type.present ? data.type.value : this.type,
       data: data.data.present ? data.data.value : this.data,
@@ -1353,6 +1342,7 @@ class PostPoliciesTableData extends DataClass
   String toString() {
     return (StringBuffer('PostPoliciesTableData(')
           ..write('id: $id, ')
+          ..write('soldierId: $soldierId, ')
           ..write('priority: $priority, ')
           ..write('type: $type, ')
           ..write('data: $data')
@@ -1361,12 +1351,13 @@ class PostPoliciesTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, priority, type, data);
+  int get hashCode => Object.hash(id, soldierId, priority, type, data);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PostPoliciesTableData &&
           other.id == this.id &&
+          other.soldierId == this.soldierId &&
           other.priority == this.priority &&
           other.type == this.type &&
           other.data == this.data);
@@ -1375,17 +1366,20 @@ class PostPoliciesTableData extends DataClass
 class PostPoliciesTableCompanion
     extends UpdateCompanion<PostPoliciesTableData> {
   final Value<int> id;
+  final Value<int?> soldierId;
   final Value<int> priority;
   final Value<String> type;
   final Value<String> data;
   const PostPoliciesTableCompanion({
     this.id = const Value.absent(),
+    this.soldierId = const Value.absent(),
     this.priority = const Value.absent(),
     this.type = const Value.absent(),
     this.data = const Value.absent(),
   });
   PostPoliciesTableCompanion.insert({
     this.id = const Value.absent(),
+    this.soldierId = const Value.absent(),
     required int priority,
     required String type,
     required String data,
@@ -1394,12 +1388,14 @@ class PostPoliciesTableCompanion
        data = Value(data);
   static Insertable<PostPoliciesTableData> custom({
     Expression<int>? id,
+    Expression<int>? soldierId,
     Expression<int>? priority,
     Expression<String>? type,
     Expression<String>? data,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (soldierId != null) 'soldier_id': soldierId,
       if (priority != null) 'priority': priority,
       if (type != null) 'type': type,
       if (data != null) 'data': data,
@@ -1408,12 +1404,14 @@ class PostPoliciesTableCompanion
 
   PostPoliciesTableCompanion copyWith({
     Value<int>? id,
+    Value<int?>? soldierId,
     Value<int>? priority,
     Value<String>? type,
     Value<String>? data,
   }) {
     return PostPoliciesTableCompanion(
       id: id ?? this.id,
+      soldierId: soldierId ?? this.soldierId,
       priority: priority ?? this.priority,
       type: type ?? this.type,
       data: data ?? this.data,
@@ -1425,6 +1423,9 @@ class PostPoliciesTableCompanion
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (soldierId.present) {
+      map['soldier_id'] = Variable<int>(soldierId.value);
     }
     if (priority.present) {
       map['priority'] = Variable<int>(priority.value);
@@ -1442,9 +1443,333 @@ class PostPoliciesTableCompanion
   String toString() {
     return (StringBuffer('PostPoliciesTableCompanion(')
           ..write('id: $id, ')
+          ..write('soldierId: $soldierId, ')
           ..write('priority: $priority, ')
           ..write('type: $type, ')
           ..write('data: $data')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SoldierPostsTableTable extends SoldierPostsTable
+    with TableInfo<$SoldierPostsTableTable, SoldierPostsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SoldierPostsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _soldierMeta = const VerificationMeta(
+    'soldier',
+  );
+  @override
+  late final GeneratedColumn<int> soldier = GeneratedColumn<int>(
+    'soldier',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES soldiers_table (id) ON UPDATE CASCADE ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _guardPostMeta = const VerificationMeta(
+    'guardPost',
+  );
+  @override
+  late final GeneratedColumn<int> guardPost = GeneratedColumn<int>(
+    'guard_post',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES guard_posts_table (id) ON UPDATE SET NULL ON DELETE SET NULL',
+    ),
+  );
+  static const VerificationMeta _editTypeMeta = const VerificationMeta(
+    'editType',
+  );
+  @override
+  late final GeneratedColumn<int> editType = GeneratedColumn<int>(
+    'edit_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: Constant(0),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [soldier, guardPost, editType, date];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'soldier_posts_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SoldierPostsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('soldier')) {
+      context.handle(
+        _soldierMeta,
+        soldier.isAcceptableOrUnknown(data['soldier']!, _soldierMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_soldierMeta);
+    }
+    if (data.containsKey('guard_post')) {
+      context.handle(
+        _guardPostMeta,
+        guardPost.isAcceptableOrUnknown(data['guard_post']!, _guardPostMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_guardPostMeta);
+    }
+    if (data.containsKey('edit_type')) {
+      context.handle(
+        _editTypeMeta,
+        editType.isAcceptableOrUnknown(data['edit_type']!, _editTypeMeta),
+      );
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => const {};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {soldier, guardPost, date},
+  ];
+  @override
+  SoldierPostsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SoldierPostsTableData(
+      soldier: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}soldier'],
+      )!,
+      guardPost: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}guard_post'],
+      )!,
+      editType: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}edit_type'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+    );
+  }
+
+  @override
+  $SoldierPostsTableTable createAlias(String alias) {
+    return $SoldierPostsTableTable(attachedDatabase, alias);
+  }
+}
+
+class SoldierPostsTableData extends DataClass
+    implements Insertable<SoldierPostsTableData> {
+  final int soldier;
+  final int guardPost;
+  final int editType;
+  final DateTime date;
+  const SoldierPostsTableData({
+    required this.soldier,
+    required this.guardPost,
+    required this.editType,
+    required this.date,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['soldier'] = Variable<int>(soldier);
+    map['guard_post'] = Variable<int>(guardPost);
+    map['edit_type'] = Variable<int>(editType);
+    map['date'] = Variable<DateTime>(date);
+    return map;
+  }
+
+  SoldierPostsTableCompanion toCompanion(bool nullToAbsent) {
+    return SoldierPostsTableCompanion(
+      soldier: Value(soldier),
+      guardPost: Value(guardPost),
+      editType: Value(editType),
+      date: Value(date),
+    );
+  }
+
+  factory SoldierPostsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SoldierPostsTableData(
+      soldier: serializer.fromJson<int>(json['soldier']),
+      guardPost: serializer.fromJson<int>(json['guardPost']),
+      editType: serializer.fromJson<int>(json['editType']),
+      date: serializer.fromJson<DateTime>(json['date']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'soldier': serializer.toJson<int>(soldier),
+      'guardPost': serializer.toJson<int>(guardPost),
+      'editType': serializer.toJson<int>(editType),
+      'date': serializer.toJson<DateTime>(date),
+    };
+  }
+
+  SoldierPostsTableData copyWith({
+    int? soldier,
+    int? guardPost,
+    int? editType,
+    DateTime? date,
+  }) => SoldierPostsTableData(
+    soldier: soldier ?? this.soldier,
+    guardPost: guardPost ?? this.guardPost,
+    editType: editType ?? this.editType,
+    date: date ?? this.date,
+  );
+  SoldierPostsTableData copyWithCompanion(SoldierPostsTableCompanion data) {
+    return SoldierPostsTableData(
+      soldier: data.soldier.present ? data.soldier.value : this.soldier,
+      guardPost: data.guardPost.present ? data.guardPost.value : this.guardPost,
+      editType: data.editType.present ? data.editType.value : this.editType,
+      date: data.date.present ? data.date.value : this.date,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldierPostsTableData(')
+          ..write('soldier: $soldier, ')
+          ..write('guardPost: $guardPost, ')
+          ..write('editType: $editType, ')
+          ..write('date: $date')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(soldier, guardPost, editType, date);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SoldierPostsTableData &&
+          other.soldier == this.soldier &&
+          other.guardPost == this.guardPost &&
+          other.editType == this.editType &&
+          other.date == this.date);
+}
+
+class SoldierPostsTableCompanion
+    extends UpdateCompanion<SoldierPostsTableData> {
+  final Value<int> soldier;
+  final Value<int> guardPost;
+  final Value<int> editType;
+  final Value<DateTime> date;
+  final Value<int> rowid;
+  const SoldierPostsTableCompanion({
+    this.soldier = const Value.absent(),
+    this.guardPost = const Value.absent(),
+    this.editType = const Value.absent(),
+    this.date = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SoldierPostsTableCompanion.insert({
+    required int soldier,
+    required int guardPost,
+    this.editType = const Value.absent(),
+    required DateTime date,
+    this.rowid = const Value.absent(),
+  }) : soldier = Value(soldier),
+       guardPost = Value(guardPost),
+       date = Value(date);
+  static Insertable<SoldierPostsTableData> custom({
+    Expression<int>? soldier,
+    Expression<int>? guardPost,
+    Expression<int>? editType,
+    Expression<DateTime>? date,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (soldier != null) 'soldier': soldier,
+      if (guardPost != null) 'guard_post': guardPost,
+      if (editType != null) 'edit_type': editType,
+      if (date != null) 'date': date,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SoldierPostsTableCompanion copyWith({
+    Value<int>? soldier,
+    Value<int>? guardPost,
+    Value<int>? editType,
+    Value<DateTime>? date,
+    Value<int>? rowid,
+  }) {
+    return SoldierPostsTableCompanion(
+      soldier: soldier ?? this.soldier,
+      guardPost: guardPost ?? this.guardPost,
+      editType: editType ?? this.editType,
+      date: date ?? this.date,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (soldier.present) {
+      map['soldier'] = Variable<int>(soldier.value);
+    }
+    if (guardPost.present) {
+      map['guard_post'] = Variable<int>(guardPost.value);
+    }
+    if (editType.present) {
+      map['edit_type'] = Variable<int>(editType.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldierPostsTableCompanion(')
+          ..write('soldier: $soldier, ')
+          ..write('guardPost: $guardPost, ')
+          ..write('editType: $editType, ')
+          ..write('date: $date, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1459,6 +1784,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $PostPoliciesTableTable postPoliciesTable =
       $PostPoliciesTableTable(this);
+  late final $SoldierPostsTableTable soldierPostsTable =
+      $SoldierPostsTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1467,7 +1794,53 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     soldiersTable,
     guardPostsTable,
     postPoliciesTable,
+    soldierPostsTable,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'soldiers_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('post_policies_table', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'soldiers_table',
+        limitUpdateKind: UpdateKind.update,
+      ),
+      result: [TableUpdate('post_policies_table', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'soldiers_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('soldier_posts_table', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'soldiers_table',
+        limitUpdateKind: UpdateKind.update,
+      ),
+      result: [TableUpdate('soldier_posts_table', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'guard_posts_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('soldier_posts_table', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'guard_posts_table',
+        limitUpdateKind: UpdateKind.update,
+      ),
+      result: [TableUpdate('soldier_posts_table', kind: UpdateKind.update)],
+    ),
+  ]);
 }
 
 typedef $$SoldiersTableTableCreateCompanionBuilder =
@@ -1496,6 +1869,70 @@ typedef $$SoldiersTableTableUpdateCompanionBuilder =
       Value<String?> phoneNumber,
       Value<DateTime?> dateOfBirth,
     });
+
+final class $$SoldiersTableTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $SoldiersTableTable, SoldiersTableData> {
+  $$SoldiersTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $PostPoliciesTableTable,
+    List<PostPoliciesTableData>
+  >
+  _postPoliciesTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.postPoliciesTable,
+        aliasName: $_aliasNameGenerator(
+          db.soldiersTable.id,
+          db.postPoliciesTable.soldierId,
+        ),
+      );
+
+  $$PostPoliciesTableTableProcessedTableManager get postPoliciesTableRefs {
+    final manager = $$PostPoliciesTableTableTableManager(
+      $_db,
+      $_db.postPoliciesTable,
+    ).filter((f) => f.soldierId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _postPoliciesTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $SoldierPostsTableTable,
+    List<SoldierPostsTableData>
+  >
+  _soldierPostsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.soldierPostsTable,
+        aliasName: $_aliasNameGenerator(
+          db.soldiersTable.id,
+          db.soldierPostsTable.soldier,
+        ),
+      );
+
+  $$SoldierPostsTableTableProcessedTableManager get soldierPostsTableRefs {
+    final manager = $$SoldierPostsTableTableTableManager(
+      $_db,
+      $_db.soldierPostsTable,
+    ).filter((f) => f.soldier.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _soldierPostsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$SoldiersTableTableFilterComposer
     extends Composer<_$AppDatabase, $SoldiersTableTable> {
@@ -1556,6 +1993,56 @@ class $$SoldiersTableTableFilterComposer
     column: $table.dateOfBirth,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> postPoliciesTableRefs(
+    Expression<bool> Function($$PostPoliciesTableTableFilterComposer f) f,
+  ) {
+    final $$PostPoliciesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.postPoliciesTable,
+      getReferencedColumn: (t) => t.soldierId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PostPoliciesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.postPoliciesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> soldierPostsTableRefs(
+    Expression<bool> Function($$SoldierPostsTableTableFilterComposer f) f,
+  ) {
+    final $$SoldierPostsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.soldierPostsTable,
+      getReferencedColumn: (t) => t.soldier,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldierPostsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.soldierPostsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SoldiersTableTableOrderingComposer
@@ -1664,6 +2151,58 @@ class $$SoldiersTableTableAnnotationComposer
     column: $table.dateOfBirth,
     builder: (column) => column,
   );
+
+  Expression<T> postPoliciesTableRefs<T extends Object>(
+    Expression<T> Function($$PostPoliciesTableTableAnnotationComposer a) f,
+  ) {
+    final $$PostPoliciesTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.postPoliciesTable,
+          getReferencedColumn: (t) => t.soldierId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PostPoliciesTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.postPoliciesTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> soldierPostsTableRefs<T extends Object>(
+    Expression<T> Function($$SoldierPostsTableTableAnnotationComposer a) f,
+  ) {
+    final $$SoldierPostsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.soldierPostsTable,
+          getReferencedColumn: (t) => t.soldier,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SoldierPostsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.soldierPostsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$SoldiersTableTableTableManager
@@ -1677,16 +2216,12 @@ class $$SoldiersTableTableTableManager
           $$SoldiersTableTableAnnotationComposer,
           $$SoldiersTableTableCreateCompanionBuilder,
           $$SoldiersTableTableUpdateCompanionBuilder,
-          (
-            SoldiersTableData,
-            BaseReferences<
-              _$AppDatabase,
-              $SoldiersTableTable,
-              SoldiersTableData
-            >,
-          ),
+          (SoldiersTableData, $$SoldiersTableTableReferences),
           SoldiersTableData,
-          PrefetchHooks Function()
+          PrefetchHooks Function({
+            bool postPoliciesTableRefs,
+            bool soldierPostsTableRefs,
+          })
         > {
   $$SoldiersTableTableTableManager(_$AppDatabase db, $SoldiersTableTable table)
     : super(
@@ -1748,9 +2283,70 @@ class $$SoldiersTableTableTableManager
                 dateOfBirth: dateOfBirth,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SoldiersTableTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback:
+              ({postPoliciesTableRefs = false, soldierPostsTableRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (postPoliciesTableRefs) db.postPoliciesTable,
+                    if (soldierPostsTableRefs) db.soldierPostsTable,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (postPoliciesTableRefs)
+                        await $_getPrefetchedData<
+                          SoldiersTableData,
+                          $SoldiersTableTable,
+                          PostPoliciesTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SoldiersTableTableReferences
+                              ._postPoliciesTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SoldiersTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).postPoliciesTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.soldierId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (soldierPostsTableRefs)
+                        await $_getPrefetchedData<
+                          SoldiersTableData,
+                          $SoldiersTableTable,
+                          SoldierPostsTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SoldiersTableTableReferences
+                              ._soldierPostsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SoldiersTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).soldierPostsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.soldier == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
         ),
       );
 }
@@ -1765,17 +2361,16 @@ typedef $$SoldiersTableTableProcessedTableManager =
       $$SoldiersTableTableAnnotationComposer,
       $$SoldiersTableTableCreateCompanionBuilder,
       $$SoldiersTableTableUpdateCompanionBuilder,
-      (
-        SoldiersTableData,
-        BaseReferences<_$AppDatabase, $SoldiersTableTable, SoldiersTableData>,
-      ),
+      (SoldiersTableData, $$SoldiersTableTableReferences),
       SoldiersTableData,
-      PrefetchHooks Function()
+      PrefetchHooks Function({
+        bool postPoliciesTableRefs,
+        bool soldierPostsTableRefs,
+      })
     >;
 typedef $$GuardPostsTableTableCreateCompanionBuilder =
     GuardPostsTableCompanion Function({
       Value<int> id,
-      required int soldierId,
       required String title,
       Value<List<Weekday>?> weekDays,
       Value<int> repeat,
@@ -1786,7 +2381,6 @@ typedef $$GuardPostsTableTableCreateCompanionBuilder =
 typedef $$GuardPostsTableTableUpdateCompanionBuilder =
     GuardPostsTableCompanion Function({
       Value<int> id,
-      Value<int> soldierId,
       Value<String> title,
       Value<List<Weekday>?> weekDays,
       Value<int> repeat,
@@ -1794,6 +2388,47 @@ typedef $$GuardPostsTableTableUpdateCompanionBuilder =
       Value<GuardPostDifficulty> difficulty,
       Value<int> shiftsPerDay,
     });
+
+final class $$GuardPostsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $GuardPostsTableTable,
+          GuardPostsTableData
+        > {
+  $$GuardPostsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $SoldierPostsTableTable,
+    List<SoldierPostsTableData>
+  >
+  _soldierPostsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.soldierPostsTable,
+        aliasName: $_aliasNameGenerator(
+          db.guardPostsTable.id,
+          db.soldierPostsTable.guardPost,
+        ),
+      );
+
+  $$SoldierPostsTableTableProcessedTableManager get soldierPostsTableRefs {
+    final manager = $$SoldierPostsTableTableTableManager(
+      $_db,
+      $_db.soldierPostsTable,
+    ).filter((f) => f.guardPost.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _soldierPostsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$GuardPostsTableTableFilterComposer
     extends Composer<_$AppDatabase, $GuardPostsTableTable> {
@@ -1806,11 +2441,6 @@ class $$GuardPostsTableTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get soldierId => $composableBuilder(
-    column: $table.soldierId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1846,6 +2476,31 @@ class $$GuardPostsTableTableFilterComposer
     column: $table.shiftsPerDay,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> soldierPostsTableRefs(
+    Expression<bool> Function($$SoldierPostsTableTableFilterComposer f) f,
+  ) {
+    final $$SoldierPostsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.soldierPostsTable,
+      getReferencedColumn: (t) => t.guardPost,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldierPostsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.soldierPostsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$GuardPostsTableTableOrderingComposer
@@ -1859,11 +2514,6 @@ class $$GuardPostsTableTableOrderingComposer
   });
   ColumnOrderings<int> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get soldierId => $composableBuilder(
-    column: $table.soldierId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1910,9 +2560,6 @@ class $$GuardPostsTableTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get soldierId =>
-      $composableBuilder(column: $table.soldierId, builder: (column) => column);
-
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
 
@@ -1935,6 +2582,32 @@ class $$GuardPostsTableTableAnnotationComposer
     column: $table.shiftsPerDay,
     builder: (column) => column,
   );
+
+  Expression<T> soldierPostsTableRefs<T extends Object>(
+    Expression<T> Function($$SoldierPostsTableTableAnnotationComposer a) f,
+  ) {
+    final $$SoldierPostsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.soldierPostsTable,
+          getReferencedColumn: (t) => t.guardPost,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SoldierPostsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.soldierPostsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$GuardPostsTableTableTableManager
@@ -1948,16 +2621,9 @@ class $$GuardPostsTableTableTableManager
           $$GuardPostsTableTableAnnotationComposer,
           $$GuardPostsTableTableCreateCompanionBuilder,
           $$GuardPostsTableTableUpdateCompanionBuilder,
-          (
-            GuardPostsTableData,
-            BaseReferences<
-              _$AppDatabase,
-              $GuardPostsTableTable,
-              GuardPostsTableData
-            >,
-          ),
+          (GuardPostsTableData, $$GuardPostsTableTableReferences),
           GuardPostsTableData,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool soldierPostsTableRefs})
         > {
   $$GuardPostsTableTableTableManager(
     _$AppDatabase db,
@@ -1975,7 +2641,6 @@ class $$GuardPostsTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<int> soldierId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<List<Weekday>?> weekDays = const Value.absent(),
                 Value<int> repeat = const Value.absent(),
@@ -1984,7 +2649,6 @@ class $$GuardPostsTableTableTableManager
                 Value<int> shiftsPerDay = const Value.absent(),
               }) => GuardPostsTableCompanion(
                 id: id,
-                soldierId: soldierId,
                 title: title,
                 weekDays: weekDays,
                 repeat: repeat,
@@ -1995,7 +2659,6 @@ class $$GuardPostsTableTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required int soldierId,
                 required String title,
                 Value<List<Weekday>?> weekDays = const Value.absent(),
                 Value<int> repeat = const Value.absent(),
@@ -2004,7 +2667,6 @@ class $$GuardPostsTableTableTableManager
                 required int shiftsPerDay,
               }) => GuardPostsTableCompanion.insert(
                 id: id,
-                soldierId: soldierId,
                 title: title,
                 weekDays: weekDays,
                 repeat: repeat,
@@ -2013,9 +2675,45 @@ class $$GuardPostsTableTableTableManager
                 shiftsPerDay: shiftsPerDay,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$GuardPostsTableTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({soldierPostsTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (soldierPostsTableRefs) db.soldierPostsTable,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (soldierPostsTableRefs)
+                    await $_getPrefetchedData<
+                      GuardPostsTableData,
+                      $GuardPostsTableTable,
+                      SoldierPostsTableData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$GuardPostsTableTableReferences
+                          ._soldierPostsTableRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$GuardPostsTableTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).soldierPostsTableRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.guardPost == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -2030,20 +2728,14 @@ typedef $$GuardPostsTableTableProcessedTableManager =
       $$GuardPostsTableTableAnnotationComposer,
       $$GuardPostsTableTableCreateCompanionBuilder,
       $$GuardPostsTableTableUpdateCompanionBuilder,
-      (
-        GuardPostsTableData,
-        BaseReferences<
-          _$AppDatabase,
-          $GuardPostsTableTable,
-          GuardPostsTableData
-        >,
-      ),
+      (GuardPostsTableData, $$GuardPostsTableTableReferences),
       GuardPostsTableData,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool soldierPostsTableRefs})
     >;
 typedef $$PostPoliciesTableTableCreateCompanionBuilder =
     PostPoliciesTableCompanion Function({
       Value<int> id,
+      Value<int?> soldierId,
       required int priority,
       required String type,
       required String data,
@@ -2051,10 +2743,47 @@ typedef $$PostPoliciesTableTableCreateCompanionBuilder =
 typedef $$PostPoliciesTableTableUpdateCompanionBuilder =
     PostPoliciesTableCompanion Function({
       Value<int> id,
+      Value<int?> soldierId,
       Value<int> priority,
       Value<String> type,
       Value<String> data,
     });
+
+final class $$PostPoliciesTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PostPoliciesTableTable,
+          PostPoliciesTableData
+        > {
+  $$PostPoliciesTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SoldiersTableTable _soldierIdTable(_$AppDatabase db) =>
+      db.soldiersTable.createAlias(
+        $_aliasNameGenerator(
+          db.postPoliciesTable.soldierId,
+          db.soldiersTable.id,
+        ),
+      );
+
+  $$SoldiersTableTableProcessedTableManager? get soldierId {
+    final $_column = $_itemColumn<int>('soldier_id');
+    if ($_column == null) return null;
+    final manager = $$SoldiersTableTableTableManager(
+      $_db,
+      $_db.soldiersTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_soldierIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
 
 class $$PostPoliciesTableTableFilterComposer
     extends Composer<_$AppDatabase, $PostPoliciesTableTable> {
@@ -2084,6 +2813,29 @@ class $$PostPoliciesTableTableFilterComposer
     column: $table.data,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$SoldiersTableTableFilterComposer get soldierId {
+    final $$SoldiersTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.soldierId,
+      referencedTable: $db.soldiersTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldiersTableTableFilterComposer(
+            $db: $db,
+            $table: $db.soldiersTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$PostPoliciesTableTableOrderingComposer
@@ -2114,6 +2866,29 @@ class $$PostPoliciesTableTableOrderingComposer
     column: $table.data,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$SoldiersTableTableOrderingComposer get soldierId {
+    final $$SoldiersTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.soldierId,
+      referencedTable: $db.soldiersTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldiersTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.soldiersTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$PostPoliciesTableTableAnnotationComposer
@@ -2136,6 +2911,29 @@ class $$PostPoliciesTableTableAnnotationComposer
 
   GeneratedColumn<String> get data =>
       $composableBuilder(column: $table.data, builder: (column) => column);
+
+  $$SoldiersTableTableAnnotationComposer get soldierId {
+    final $$SoldiersTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.soldierId,
+      referencedTable: $db.soldiersTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldiersTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.soldiersTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$PostPoliciesTableTableTableManager
@@ -2149,16 +2947,9 @@ class $$PostPoliciesTableTableTableManager
           $$PostPoliciesTableTableAnnotationComposer,
           $$PostPoliciesTableTableCreateCompanionBuilder,
           $$PostPoliciesTableTableUpdateCompanionBuilder,
-          (
-            PostPoliciesTableData,
-            BaseReferences<
-              _$AppDatabase,
-              $PostPoliciesTableTable,
-              PostPoliciesTableData
-            >,
-          ),
+          (PostPoliciesTableData, $$PostPoliciesTableTableReferences),
           PostPoliciesTableData,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool soldierId})
         > {
   $$PostPoliciesTableTableTableManager(
     _$AppDatabase db,
@@ -2179,11 +2970,13 @@ class $$PostPoliciesTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<int?> soldierId = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<String> data = const Value.absent(),
               }) => PostPoliciesTableCompanion(
                 id: id,
+                soldierId: soldierId,
                 priority: priority,
                 type: type,
                 data: data,
@@ -2191,19 +2984,68 @@ class $$PostPoliciesTableTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<int?> soldierId = const Value.absent(),
                 required int priority,
                 required String type,
                 required String data,
               }) => PostPoliciesTableCompanion.insert(
                 id: id,
+                soldierId: soldierId,
                 priority: priority,
                 type: type,
                 data: data,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PostPoliciesTableTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({soldierId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (soldierId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.soldierId,
+                                referencedTable:
+                                    $$PostPoliciesTableTableReferences
+                                        ._soldierIdTable(db),
+                                referencedColumn:
+                                    $$PostPoliciesTableTableReferences
+                                        ._soldierIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ),
       );
 }
@@ -2218,16 +3060,418 @@ typedef $$PostPoliciesTableTableProcessedTableManager =
       $$PostPoliciesTableTableAnnotationComposer,
       $$PostPoliciesTableTableCreateCompanionBuilder,
       $$PostPoliciesTableTableUpdateCompanionBuilder,
-      (
-        PostPoliciesTableData,
+      (PostPoliciesTableData, $$PostPoliciesTableTableReferences),
+      PostPoliciesTableData,
+      PrefetchHooks Function({bool soldierId})
+    >;
+typedef $$SoldierPostsTableTableCreateCompanionBuilder =
+    SoldierPostsTableCompanion Function({
+      required int soldier,
+      required int guardPost,
+      Value<int> editType,
+      required DateTime date,
+      Value<int> rowid,
+    });
+typedef $$SoldierPostsTableTableUpdateCompanionBuilder =
+    SoldierPostsTableCompanion Function({
+      Value<int> soldier,
+      Value<int> guardPost,
+      Value<int> editType,
+      Value<DateTime> date,
+      Value<int> rowid,
+    });
+
+final class $$SoldierPostsTableTableReferences
+    extends
         BaseReferences<
           _$AppDatabase,
-          $PostPoliciesTableTable,
-          PostPoliciesTableData
-        >,
-      ),
-      PostPoliciesTableData,
-      PrefetchHooks Function()
+          $SoldierPostsTableTable,
+          SoldierPostsTableData
+        > {
+  $$SoldierPostsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SoldiersTableTable _soldierTable(_$AppDatabase db) =>
+      db.soldiersTable.createAlias(
+        $_aliasNameGenerator(db.soldierPostsTable.soldier, db.soldiersTable.id),
+      );
+
+  $$SoldiersTableTableProcessedTableManager get soldier {
+    final $_column = $_itemColumn<int>('soldier')!;
+
+    final manager = $$SoldiersTableTableTableManager(
+      $_db,
+      $_db.soldiersTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_soldierTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $GuardPostsTableTable _guardPostTable(_$AppDatabase db) =>
+      db.guardPostsTable.createAlias(
+        $_aliasNameGenerator(
+          db.soldierPostsTable.guardPost,
+          db.guardPostsTable.id,
+        ),
+      );
+
+  $$GuardPostsTableTableProcessedTableManager get guardPost {
+    final $_column = $_itemColumn<int>('guard_post')!;
+
+    final manager = $$GuardPostsTableTableTableManager(
+      $_db,
+      $_db.guardPostsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_guardPostTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SoldierPostsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SoldierPostsTableTable> {
+  $$SoldierPostsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get editType => $composableBuilder(
+    column: $table.editType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SoldiersTableTableFilterComposer get soldier {
+    final $$SoldiersTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.soldier,
+      referencedTable: $db.soldiersTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldiersTableTableFilterComposer(
+            $db: $db,
+            $table: $db.soldiersTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GuardPostsTableTableFilterComposer get guardPost {
+    final $$GuardPostsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.guardPost,
+      referencedTable: $db.guardPostsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GuardPostsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.guardPostsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SoldierPostsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SoldierPostsTableTable> {
+  $$SoldierPostsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get editType => $composableBuilder(
+    column: $table.editType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SoldiersTableTableOrderingComposer get soldier {
+    final $$SoldiersTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.soldier,
+      referencedTable: $db.soldiersTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldiersTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.soldiersTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GuardPostsTableTableOrderingComposer get guardPost {
+    final $$GuardPostsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.guardPost,
+      referencedTable: $db.guardPostsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GuardPostsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.guardPostsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SoldierPostsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SoldierPostsTableTable> {
+  $$SoldierPostsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get editType =>
+      $composableBuilder(column: $table.editType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  $$SoldiersTableTableAnnotationComposer get soldier {
+    final $$SoldiersTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.soldier,
+      referencedTable: $db.soldiersTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SoldiersTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.soldiersTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GuardPostsTableTableAnnotationComposer get guardPost {
+    final $$GuardPostsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.guardPost,
+      referencedTable: $db.guardPostsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GuardPostsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.guardPostsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SoldierPostsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SoldierPostsTableTable,
+          SoldierPostsTableData,
+          $$SoldierPostsTableTableFilterComposer,
+          $$SoldierPostsTableTableOrderingComposer,
+          $$SoldierPostsTableTableAnnotationComposer,
+          $$SoldierPostsTableTableCreateCompanionBuilder,
+          $$SoldierPostsTableTableUpdateCompanionBuilder,
+          (SoldierPostsTableData, $$SoldierPostsTableTableReferences),
+          SoldierPostsTableData,
+          PrefetchHooks Function({bool soldier, bool guardPost})
+        > {
+  $$SoldierPostsTableTableTableManager(
+    _$AppDatabase db,
+    $SoldierPostsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SoldierPostsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SoldierPostsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SoldierPostsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> soldier = const Value.absent(),
+                Value<int> guardPost = const Value.absent(),
+                Value<int> editType = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldierPostsTableCompanion(
+                soldier: soldier,
+                guardPost: guardPost,
+                editType: editType,
+                date: date,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int soldier,
+                required int guardPost,
+                Value<int> editType = const Value.absent(),
+                required DateTime date,
+                Value<int> rowid = const Value.absent(),
+              }) => SoldierPostsTableCompanion.insert(
+                soldier: soldier,
+                guardPost: guardPost,
+                editType: editType,
+                date: date,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SoldierPostsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({soldier = false, guardPost = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (soldier) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.soldier,
+                                referencedTable:
+                                    $$SoldierPostsTableTableReferences
+                                        ._soldierTable(db),
+                                referencedColumn:
+                                    $$SoldierPostsTableTableReferences
+                                        ._soldierTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (guardPost) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.guardPost,
+                                referencedTable:
+                                    $$SoldierPostsTableTableReferences
+                                        ._guardPostTable(db),
+                                referencedColumn:
+                                    $$SoldierPostsTableTableReferences
+                                        ._guardPostTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SoldierPostsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SoldierPostsTableTable,
+      SoldierPostsTableData,
+      $$SoldierPostsTableTableFilterComposer,
+      $$SoldierPostsTableTableOrderingComposer,
+      $$SoldierPostsTableTableAnnotationComposer,
+      $$SoldierPostsTableTableCreateCompanionBuilder,
+      $$SoldierPostsTableTableUpdateCompanionBuilder,
+      (SoldierPostsTableData, $$SoldierPostsTableTableReferences),
+      SoldierPostsTableData,
+      PrefetchHooks Function({bool soldier, bool guardPost})
     >;
 
 class $AppDatabaseManager {
@@ -2239,4 +3483,6 @@ class $AppDatabaseManager {
       $$GuardPostsTableTableTableManager(_db, _db.guardPostsTable);
   $$PostPoliciesTableTableTableManager get postPoliciesTable =>
       $$PostPoliciesTableTableTableManager(_db, _db.postPoliciesTable);
+  $$SoldierPostsTableTableTableManager get soldierPostsTable =>
+      $$SoldierPostsTableTableTableManager(_db, _db.soldierPostsTable);
 }

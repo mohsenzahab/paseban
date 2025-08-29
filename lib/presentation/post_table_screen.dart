@@ -1,59 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:paseban/core/utils/date_helper.dart';
-import 'package:shamsi_date/shamsi_date.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:paseban/app/locator.dart';
+import 'package:paseban/core/bloc/widgets/bloc_message_listener.dart';
+import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
-import '../domain/enums.dart';
+import '../core/utils/date_helper.dart';
 import '../domain/models/soldier.dart';
+import 'forms/soldier_form.dart';
 
 class PostTableScreen extends StatelessWidget {
   const PostTableScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(title: const Text("جدول سربازان")),
-        body: const GuardTable(),
+    return Scaffold(
+      appBar: AppBar(title: const Text("جدول سربازان")),
+      body: BlocMessageListener.group(
+        blocs: [sl<MonthlyPostTableCubit>()],
+        child: const GuardTable(),
       ),
     );
   }
 }
 
 class GuardDataSource extends DataGridSource {
-  GuardDataSource(List<Soldier> guards) {
-    _guards = guards
-        .map(
-          (e) => DataGridRow(
-            cells: [
-              DataGridCell<String>(
-                columnName: 'name',
-                value: '${e.firstName} ${e.lastName}',
-              ),
-              ...[
-                for (var i = 1; i <= 31; i++)
-                  DataGridCell<String>(columnName: i.toString(), value: 'N/A'),
-              ],
-            ],
-          ),
-        )
-        .toList();
+  GuardDataSource(List<Soldier> guards, MonthlyPostTableState state) {
+    final range = state.dateRange;
+
+    soldiers =
+        (guards..sort(
+              (a, b) => a.dateOfEnlistment.compareTo(b.dateOfEnlistment),
+            ))
+            .map((e) {
+              final cells = [
+                DataGridCell<Soldier>(columnName: 'name', value: e),
+                ...[
+                  for (
+                    var i = range.start;
+                    !i.isAfter(range.end);
+                    i = i.add(Duration(days: 1))
+                  )
+                    DataGridCell<String>(
+                      columnName: i.toIso8601String(),
+                      value: 'N/A',
+                    ),
+                ],
+              ];
+              return DataGridRow(cells: cells);
+            })
+            .toList();
   }
 
-  List<DataGridRow> _guards = [];
+  List<DataGridRow> soldiers = [];
 
   @override
-  List<DataGridRow> get rows => _guards;
+  List<DataGridRow> get rows => soldiers;
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     return DataGridRowAdapter(
       cells: row.getCells().map((cell) {
+        final value = cell.value;
+        if (value is Soldier) {
+          return Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.all(8.0),
+            child: Text('${value.firstName} ${value.lastName}'),
+          );
+        }
         return Container(
           alignment: Alignment.center,
           padding: const EdgeInsets.all(8.0),
-          child: Text(cell.value.toString()),
+          child: Text(value.toString()),
         );
       }).toList(),
     );
@@ -64,113 +83,100 @@ class GuardTable extends StatelessWidget {
   const GuardTable({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final monthEndDate = Jalali.now().copy(day: 1).addMonths(1).addDays(-1);
-    final guards = [
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-      Soldier(
-        firstName: 'محسن',
-        lastName: 'ر',
-        rank: MilitaryRank.seniorLieutenant,
-        dateOfEnlistment: DateTime.now(),
-      ),
-    ];
-
-    final dataSource = GuardDataSource(guards);
-
-    return SfDataGrid(
-      source: dataSource,
-      columns: [
-        GridColumn(
-          columnName: 'name',
-          label: Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.all(8.0),
-            child: Text('name'),
-          ),
-        ),
-
-        for (
-          Jalali i = Jalali.now().copy(day: 1);
-          i <= monthEndDate.addDays(1);
-          i = i.addDays(1)
-        )
+  Widget build(BuildContext _) {
+    return BlocBuilder<MonthlyPostTableCubit, MonthlyPostTableState>(
+      builder: (context, state) {
+        final dataSource = GuardDataSource(
+          state.soldiers.values.toList(),
+          state,
+        );
+        final columns = [
           GridColumn(
-            columnName: i.toString(),
+            columnName: 'soldier',
             label: Container(
               alignment: Alignment.center,
               padding: const EdgeInsets.all(8.0),
-              child: Text('${i.formatter.wN} ${i.formatter.dd}'),
+              child: Text('سرباز'),
             ),
           ),
-      ],
-      frozenColumnsCount: 1, // ستون اول (نام) ثابت بمونه
-      frozenRowsCount: 0, // هدر بالا ثابت بمونه
+
+          for (
+            DateTime i = state.dateRange.start;
+            !i.isAfter(state.dateRange.end);
+            i = i.add(Duration(days: 1))
+          )
+            GridColumn(
+              columnName: i.toIso8601String(),
+              label: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: i.weekDay(CalendarMode.jalali) == 7
+                      ? Colors.red
+                      : Colors.white,
+                ),
+                padding: const EdgeInsets.all(8.0),
+                child: Text('${i.jf.wN} ${i.jf.dd}'),
+              ),
+            ),
+        ];
+        return SfDataGrid(
+          source: dataSource,
+          columns: columns,
+          onCellTap: (details) {
+            final row = details.rowColumnIndex.rowIndex - 1;
+            final column = details.rowColumnIndex.columnIndex;
+            final value = dataSource.soldiers[row].getCells()[column].value;
+            if (details.column.columnName == 'soldier') {
+              SoldierForm.show(context, soldier: value);
+            }
+          },
+          onCellLongPress: (details) {
+            final row = details.rowColumnIndex.rowIndex - 1;
+            final column = details.rowColumnIndex.columnIndex;
+            final Soldier value = dataSource.soldiers[row]
+                .getCells()[column]
+                .value;
+            if (details.column.columnName == 'soldier') {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text('حذف سرباز'),
+                    content: Text(
+                      'آیا مطمئن هستید که میخواهید سرباز را حذف کنید؟',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('لغو'),
+                      ),
+                      FilledButton(
+                        onPressed: () {
+                          context.read<MonthlyPostTableCubit>().deleteSoldier(
+                            value,
+                          );
+                          Navigator.pop(context);
+                        },
+                        child: Text('حذف'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
+          },
+          frozenColumnsCount: 1, // ستون اول (نام) ثابت بمونه
+          frozenRowsCount: 0, // هدر بالا ثابت بمونه
+          footer: Align(
+            child: FilledButton(
+              onPressed: () {
+                SoldierForm.show(context);
+              },
+              child: Text('اضافه کردن سرباز'),
+            ),
+          ),
+        );
+      },
     );
   }
 }
