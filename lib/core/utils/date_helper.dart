@@ -4,22 +4,27 @@ import 'package:shamsi_date/shamsi_date.dart';
 
 enum CalendarMode { gregorian, jalali }
 
-String jalaliFormatter(DateTime date) {
+String formatJalaliCompactDate(DateTime date) {
   var f = date.toJalali().formatter;
 
   return '${f.yyyy}/${f.m}/${f.dd}';
 }
 
-String gregorianFormatter(DateTime date) {
+Jalali parseJalaliCompactDate(String inputString) {
+  var parts = inputString.split('/');
+  return Jalali(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+}
+
+String formatGregorianCompactDate(DateTime date) {
   var f = date.toGregorian().formatter;
   return '${f.m}/${f.dd}/${f.yyyy}';
 }
 
-String format(DateTime date, String localName) {
+String formatCompactDate(DateTime date, String localName) {
   if (localName == 'fa') {
-    return jalaliFormatter(date);
+    return formatJalaliCompactDate(date);
   } else {
-    return gregorianFormatter(date);
+    return formatGregorianCompactDate(date);
   }
 }
 

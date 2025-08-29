@@ -38,12 +38,10 @@ class _BaseFormState extends State<BaseForm> {
             child: Text(widget.title),
           ),
           const Divider(),
-          SingleChildScrollView(
-            child: FormBuilder(
-              key: formKey,
-              initialValue: widget.initialValue ?? {},
-              child: widget.builder(context, formKey),
-            ),
+          FormBuilder(
+            key: formKey,
+            initialValue: widget.initialValue ?? {},
+            child: widget.builder(context, formKey),
           ),
           const Divider(),
           Row(

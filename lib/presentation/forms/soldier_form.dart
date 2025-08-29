@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:intl_date_picker/intl_date_picker.dart';
+import 'package:paseban/core/utils/date_helper.dart';
 import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
 import 'package:paseban/presentation/forms/base_form.dart';
 
@@ -72,11 +74,44 @@ class _SoldierFormState extends State<SoldierForm> {
               }).toList(),
               validator: FormBuilderValidators.required(),
             ),
-            FormBuilderDateTimePicker(
+
+            FormBuilderField<DateTime>(
               name: 'dateOfEnlistment',
-              decoration: const InputDecoration(labelText: 'تاریخ اعزام'),
               validator: FormBuilderValidators.required(),
               valueTransformer: (value) => value?.millisecondsSinceEpoch,
+              builder: (field) {
+                return InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'تاریخ اعزام',
+                    contentPadding: EdgeInsets.only(top: 10.0, bottom: 0.0),
+                    border: InputBorder.none,
+                    errorText: field.errorText,
+                  ),
+                  child: TextButton(
+                    child: Text(
+                      field.value == null
+                          ? 'تاریخ اعزام'
+                          : formatJalaliCompactDate(field.value!),
+                    ),
+                    onPressed: () async {
+                      final date = await showIntlDatePicker(
+                        context: context,
+                        calendarMode: Calendar.jalali,
+                        initialDate: DateTime.now().addYears(
+                          -1,
+                          CalendarMode.jalali,
+                        ),
+                        firstDate: DateTime.now().addYears(
+                          -4,
+                          CalendarMode.jalali,
+                        ),
+                        lastDate: DateTime.now(),
+                      );
+                      if (date != null) field.didChange(date);
+                    },
+                  ),
+                );
+              },
             ),
             FormBuilderTextField(
               name: 'nickName',
