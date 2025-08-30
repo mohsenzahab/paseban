@@ -106,4 +106,30 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
     );
     addSuccess('سرباز حذف شد');
   }
+
+  void addGuardPost(GuardPost post) async {
+    final result = await guardPostRepository.insert(post);
+    if (result != -1) {
+      emit(
+        state.copyWith(
+          BlocStatus.ready,
+          guardPosts: await guardPostRepository.getAll(),
+        ),
+      );
+      addSuccess('پست اضافه شد');
+    } else {
+      addError('پست اضافه نشد');
+    }
+  }
+
+  void deleteGuardPost(int? id) async {
+    guardPostRepository.deleteById(id!);
+    emit(
+      state.copyWith(
+        BlocStatus.ready,
+        guardPosts: await guardPostRepository.getAll(),
+      ),
+    );
+    addSuccess('پست حذف شد');
+  }
 }

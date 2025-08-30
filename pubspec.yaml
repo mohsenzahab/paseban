@@ -57,6 +57,7 @@ dependencies:
   calendar_date_picker2: ^2.0.1
   intl_date_picker:
     path: packages/intl_date_picker
+  dropdown_button2: ^2.3.9
 
 dev_dependencies:
   flutter_test:

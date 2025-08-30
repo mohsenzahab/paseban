@@ -8,6 +8,7 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import '../core/utils/date_helper.dart';
 import '../domain/models/soldier.dart';
 import 'forms/soldier_form.dart';
+import 'posts_screen.dart';
 
 class PostTableScreen extends StatelessWidget {
   const PostTableScreen({super.key});
@@ -15,7 +16,27 @@ class PostTableScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("جدول سربازان")),
+      appBar: AppBar(
+        title: const Text("جدول سربازان"),
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) {
+              return [
+                PopupMenuItem(
+                  value: 0,
+                  child: Text('افزودن سرباز'),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PostsScreen(),
+                    ),
+                  ),
+                ),
+              ];
+            },
+          ),
+        ],
+      ),
       body: BlocMessageListener.group(
         blocs: [sl<MonthlyPostTableCubit>()],
         child: const GuardTable(),
