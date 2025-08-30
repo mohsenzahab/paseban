@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:paseban/app/locator.dart';
 import 'package:paseban/core/bloc/widgets/bloc_message_listener.dart';
 import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
+import 'package:paseban/presentation/policies_screen.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 import '../core/utils/date_helper.dart';
@@ -24,11 +25,21 @@ class PostTableScreen extends StatelessWidget {
               return [
                 PopupMenuItem(
                   value: 0,
-                  child: Text('افزودن سرباز'),
+                  child: Text('افزودن پست'),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const PostsScreen(),
+                    ),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 1,
+                  child: Text('سیاست ها'),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PoliciesScreen(),
                     ),
                   ),
                 ),

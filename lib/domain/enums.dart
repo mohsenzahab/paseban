@@ -184,7 +184,21 @@ enum PostPolicyType {
   maxPostCount,
   noWeekendPerMonth,
   equalHolidayPost,
-  equalPostDifficulty,
+  equalPostDifficulty;
+
+  String get title => switch (this) {
+    leave => "مرخصی",
+    friendSoldiers => "دوستان سربازان",
+    weekOffDays => "روزهای خاموش",
+    noNightNNight => "بدون شب",
+    noNight1Night => "بدون شب یک",
+    noNight2Night => "بدون شب دو",
+    minPostCount => "حداقل تعداد پست",
+    maxPostCount => "حداکثر تعداد پست",
+    noWeekendPerMonth => "بدون هفته در ماه",
+    equalHolidayPost => "تعداد پست هفتگی",
+    equalPostDifficulty => "سختی پست هفتگی",
+  };
 }
 
 enum EditType { manual, auto }

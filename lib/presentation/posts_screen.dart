@@ -347,3 +347,88 @@ class _PostsScreenState extends State<PostsScreen> {
     );
   }
 }
+
+class FormBuilderMultiDropdown<T> extends StatelessWidget {
+  const FormBuilderMultiDropdown({
+    super.key,
+    required this.items,
+    required this.name,
+    required this.label,
+  });
+  final List<T> items;
+  final String name;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return FormBuilderField<List<T>>(
+      builder: (field) {
+        final selectedItems = field.value ?? [];
+        return DropdownButton2(
+          isExpanded: true,
+          hint: Text(label),
+          items: items
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e,
+                  child: StatefulBuilder(
+                    builder: (context, menuSetState) {
+                      final isSelected = selectedItems.contains(e);
+                      return InkWell(
+                        onTap: () {
+                          isSelected
+                              ? selectedItems.remove(e)
+                              : selectedItems.add(e);
+                          //This rebuilds the StatefulWidget to update the button's text
+                          field.didChange(selectedItems);
+                          //This rebuilds the dropdownMenu Widget to update the check mark
+                          menuSetState(() {});
+                        },
+                        child: Container(
+                          height: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            children: [
+                              if (isSelected)
+                                const Icon(Icons.check_box_outlined)
+                              else
+                                const Icon(Icons.check_box_outline_blank),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  e.toString(),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              )
+              .toList(),
+          value: selectedItems.isEmpty ? null : selectedItems.last,
+          onChanged: (value) {},
+          selectedItemBuilder: (context) {
+            return items.map((item) {
+              return Container(
+                alignment: AlignmentDirectional.center,
+                child: Text(
+                  field.value?.join(', ') ?? '',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  maxLines: 1,
+                ),
+              );
+            }).toList();
+          },
+        );
+      },
+      name: name,
+    );
+  }
+}

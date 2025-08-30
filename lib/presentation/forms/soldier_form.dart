@@ -75,43 +75,9 @@ class _SoldierFormState extends State<SoldierForm> {
               validator: FormBuilderValidators.required(),
             ),
 
-            FormBuilderField<DateTime>(
+            FormBuilderJalaliDatePicker(
               name: 'dateOfEnlistment',
-              validator: FormBuilderValidators.required(),
-              valueTransformer: (value) => value?.millisecondsSinceEpoch,
-              builder: (field) {
-                return InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'تاریخ اعزام',
-                    contentPadding: EdgeInsets.only(top: 10.0, bottom: 0.0),
-                    border: InputBorder.none,
-                    errorText: field.errorText,
-                  ),
-                  child: TextButton(
-                    child: Text(
-                      field.value == null
-                          ? 'تاریخ اعزام'
-                          : formatJalaliCompactDate(field.value!),
-                    ),
-                    onPressed: () async {
-                      final date = await showIntlDatePicker(
-                        context: context,
-                        calendarMode: Calendar.jalali,
-                        initialDate: DateTime.now().addYears(
-                          -1,
-                          CalendarMode.jalali,
-                        ),
-                        firstDate: DateTime.now().addYears(
-                          -4,
-                          CalendarMode.jalali,
-                        ),
-                        lastDate: DateTime.now(),
-                      );
-                      if (date != null) field.didChange(date);
-                    },
-                  ),
-                );
-              },
+              label: 'تاریخ اعزام',
             ),
             FormBuilderTextField(
               name: 'nickName',
@@ -131,6 +97,53 @@ class _SoldierFormState extends State<SoldierForm> {
               decoration: const InputDecoration(labelText: 'تاریخ تولد'),
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class FormBuilderJalaliDatePicker extends StatelessWidget {
+  const FormBuilderJalaliDatePicker({
+    super.key,
+    required this.name,
+    required this.label,
+  });
+
+  final String name;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return FormBuilderField<DateTime>(
+      name: name,
+      validator: FormBuilderValidators.required(),
+      valueTransformer: (value) => value?.millisecondsSinceEpoch,
+      builder: (field) {
+        return InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            contentPadding: EdgeInsets.only(top: 10.0, bottom: 0.0),
+            border: InputBorder.none,
+            errorText: field.errorText,
+          ),
+          child: TextButton(
+            child: Text(
+              field.value == null
+                  ? label
+                  : formatJalaliCompactDate(field.value!),
+            ),
+            onPressed: () async {
+              final date = await showIntlDatePicker(
+                context: context,
+                calendarMode: Calendar.jalali,
+                initialDate: DateTime.now().addYears(-1, CalendarMode.jalali),
+                firstDate: DateTime.now().addYears(-4, CalendarMode.jalali),
+                lastDate: DateTime.now(),
+              );
+              if (date != null) field.didChange(date);
+            },
+          ),
         );
       },
     );

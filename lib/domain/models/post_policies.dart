@@ -13,9 +13,23 @@ sealed class PostPolicy {
     this.soldierId,
     this.priority = Priority.unimportant,
   });
+
+  String get title => switch (this) {
+    Leave() => 'مرخصی',
+    FriendSoldiers() => 'دوستان',
+    WeekOffDays() => 'روز هفته',
+    NoNightNNight() => 'بدون شب',
+    MinPostCount() => 'حداقل پست',
+    MaxPostCount() => 'حداکثر پست',
+    NoWeekendPerMonth() => 'بدون هفته',
+    EqualHolidayPost() => 'پست هفتگی',
+    EqualPostDifficulty() => 'سختی پست',
+  };
+
+  // static List<PostPolicyType> get values => [Leave, FriendSoldiers, WeekOffDays, NoNightNNight, MinPostCount, MaxPostCount, NoWeekendPerMonth, EqualHolidayPost, EqualPostDifficulty];
 }
 
-abstract class ValuePostPolicy<T> extends PostPolicy {
+sealed class ValuePostPolicy<T> extends PostPolicy {
   const ValuePostPolicy({
     super.id,
     super.soldierId,
@@ -78,7 +92,7 @@ interface class StagedPostPolicy<T> {
   StagedPostPolicy({this.stagePriority});
 }
 
-abstract class PublicStagedPolicy<T> extends ValuePostPolicy<T>
+sealed class PublicStagedPolicy<T> extends ValuePostPolicy<T>
     implements StagedPostPolicy<T> {
   PublicStagedPolicy({
     super.id,
@@ -122,7 +136,7 @@ class NoWeekendPerMonth extends PublicStagedPolicy<int> {
   });
 }
 
-abstract class StaticStagedPolicy<T> extends PostPolicy
+sealed class StaticStagedPolicy<T> extends PostPolicy
     implements StagedPostPolicy<T> {
   StaticStagedPolicy({
     super.id,
