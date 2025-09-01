@@ -123,7 +123,7 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
   }
 
   void deleteGuardPost(int? id) async {
-    guardPostRepository.deleteById(id!);
+    await guardPostRepository.deleteById(id!);
     emit(
       state.copyWith(
         BlocStatus.ready,
@@ -131,5 +131,46 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
       ),
     );
     addSuccess('پست حذف شد');
+  }
+
+  void addPolicy(PostPolicy value) async {
+    final result = await policyRepository.insert(value);
+    if (result != -1) {
+      emit(
+        state.copyWith(
+          BlocStatus.ready,
+          policies: await policyRepository.getAll(),
+        ),
+      );
+      addSuccess('سیاست اضافه شد');
+    } else {
+      addFailure('سیاست اضافه نشد');
+    }
+  }
+
+  void removePolicy(PostPolicy policy) async {
+    await policyRepository.deleteById(policy.id!);
+    emit(
+      state.copyWith(
+        BlocStatus.ready,
+        policies: await policyRepository.getAll(),
+      ),
+    );
+    addSuccess('سیاست حذف شد');
+  }
+
+  void editPolicy(PostPolicy value, int id) async {
+    final result = await policyRepository.updatePolicy(value.copyWith(id: id));
+    if (result) {
+      emit(
+        state.copyWith(
+          BlocStatus.ready,
+          policies: await policyRepository.getAll(),
+        ),
+      );
+      addSuccess('سیاست ویرایش شد');
+    } else {
+      addError('سیاست ویرایش نشد');
+    }
   }
 }

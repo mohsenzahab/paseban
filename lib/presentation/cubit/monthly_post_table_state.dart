@@ -136,7 +136,7 @@ class MonthlyPostTableState extends BlocState {
   static (List<PostPolicy>, Map<int, List<PostPolicy>>) _initPolicies(
     List<PostPolicy> policies,
   ) {
-    final public = List<PostPolicy>.empty();
+    final public = <PostPolicy>[];
     final soldiers = <int, List<PostPolicy>>{};
     for (var pol in policies) {
       final soldierId = pol.soldierId;

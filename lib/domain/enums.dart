@@ -4,7 +4,31 @@ enum GuardPostDifficulty {
   hard, // سخت
 }
 
+extension GuardPostDifficultyExt on GuardPostDifficulty {
+  String get nameFa {
+    return switch (this) {
+      GuardPostDifficulty.easy => 'ساده',
+      GuardPostDifficulty.medium => 'متوسط',
+      GuardPostDifficulty.hard => 'سخت',
+    };
+  }
+}
+
 enum Priority { unimportant, veryLow, low, medium, high, veryHigh, absolute }
+
+extension PriorityExt on Priority {
+  String get nameFa {
+    return switch (this) {
+      Priority.unimportant => 'غیر ضروری',
+      Priority.veryLow => 'خیلی کم',
+      Priority.low => 'کم',
+      Priority.medium => 'متوسط',
+      Priority.high => 'زیاد',
+      Priority.veryHigh => 'خیلی زیاد',
+      Priority.absolute => 'مطلق',
+    };
+  }
+}
 
 enum MilitaryRank {
   // Enlisted (سربازان و درجه‌داران)
@@ -181,8 +205,8 @@ enum PostPolicyType {
   noNight1Night,
   noNight2Night,
   minPostCount,
-  maxPostCount,
   noWeekendPerMonth,
+  maxPostCount,
   equalHolidayPost,
   equalPostDifficulty;
 

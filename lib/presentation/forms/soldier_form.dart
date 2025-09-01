@@ -108,10 +108,12 @@ class FormBuilderJalaliDatePicker extends StatelessWidget {
     super.key,
     required this.name,
     required this.label,
+    this.onChanged,
   });
 
   final String name;
   final String label;
+  final void Function(DateTime? value)? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +143,8 @@ class FormBuilderJalaliDatePicker extends StatelessWidget {
                 firstDate: DateTime.now().addYears(-4, CalendarMode.jalali),
                 lastDate: DateTime.now(),
               );
-              if (date != null) field.didChange(date);
+              field.didChange(date);
+              onChanged?.call(date);
             },
           ),
         );

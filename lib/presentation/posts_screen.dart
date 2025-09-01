@@ -354,10 +354,12 @@ class FormBuilderMultiDropdown<T> extends StatelessWidget {
     required this.items,
     required this.name,
     required this.label,
+    this.onChanged,
   });
   final List<T> items;
   final String name;
   final String label;
+  final ValueChanged<List<T>>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -381,6 +383,7 @@ class FormBuilderMultiDropdown<T> extends StatelessWidget {
                               : selectedItems.add(e);
                           //This rebuilds the StatefulWidget to update the button's text
                           field.didChange(selectedItems);
+                          onChanged?.call(selectedItems);
                           //This rebuilds the dropdownMenu Widget to update the check mark
                           menuSetState(() {});
                         },
