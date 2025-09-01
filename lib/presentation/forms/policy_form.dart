@@ -18,8 +18,8 @@ class PolicyForm extends StatefulWidget {
     this.onCleared,
   });
 
-  final ValueChanged<PostPolicy>? onSubmit;
   final VoidCallback? onCleared;
+  final ValueChanged<PostPolicy>? onSubmit;
   final PostPolicy? policy;
   final Soldier? soldier;
 
@@ -32,14 +32,14 @@ class _PolicyFormState extends State<PolicyForm> {
   Map<ConscriptionStage, dynamic>? conscriptionStages;
   PostPolicy? editing;
   DateTime? end;
+  final formKey = GlobalKey<FormBuilderState>();
+  late bool isEdit;
   List<Widget>? stageFields;
   DateTime? start;
   PostPolicyType? type;
   late final List<PostPolicyType> types;
 
   Priority? _priority;
-
-  final formKey = GlobalKey<FormBuilderState>();
 
   @override
   didUpdateWidget(covariant PolicyForm oldWidget) {
@@ -62,7 +62,7 @@ class _PolicyFormState extends State<PolicyForm> {
     super.initState();
     isEdit = widget.policy != null;
     types = soldierId != null
-        ? PostPolicyType.values
+        ? PostPolicyType.values.take(9).toList()
         : PostPolicyType.values.skip(3).toList();
 
     editing = widget.policy;
@@ -79,82 +79,82 @@ class _PolicyFormState extends State<PolicyForm> {
 
   Priority? get priority => _priority ?? editing?.priority;
 
-  set priority(Priority? value) => _priority = value;
+  set priority(Priority? value) => _priority ??= value;
 
   int? get soldierId => widget.soldier?.id!;
 
   List<Widget> getPolicyWidget(GlobalKey<FormBuilderState> formKey) {
     final cubit = context.read<MonthlyPostTableCubit>();
-    final List<Widget> widgets;
+    List<Widget> widgets = [];
     switch (type!) {
       case PostPolicyType.leave:
+        if (soldierId == null) break;
+
         priority = Priority.absolute;
         widgets = [
-          if (soldierId != null)
-            FormBuilderJalaliDatePicker(
-              name: 'start',
-              label: 'تاریخ شروع مرخصی',
-              onChanged: (value) {
-                start = value;
-                _initLeavePolicy();
-                setState(() {});
-              },
-            ),
-          if (soldierId != null)
-            FormBuilderJalaliDatePicker(
-              name: 'end',
-              label: 'تاریخ پایان مرخصی',
-              onChanged: (value) {
-                end = value;
-                _initLeavePolicy();
-                setState(() {});
-              },
-            ),
+          FormBuilderJalaliDatePicker(
+            name: 'start',
+            label: 'تاریخ شروع مرخصی',
+            onChanged: (value) {
+              start = value;
+              _initLeavePolicy();
+              setState(() {});
+            },
+          ),
+          FormBuilderJalaliDatePicker(
+            name: 'end',
+            label: 'تاریخ پایان مرخصی',
+            onChanged: (value) {
+              end = value;
+              _initLeavePolicy();
+              setState(() {});
+            },
+          ),
         ];
         break;
       case PostPolicyType.friendSoldiers:
+        if (soldierId == null) break;
         priority = Priority.veryLow;
         widgets = [
-          if (soldierId != null)
-            FormBuilderMultiDropdown(
-              label: 'دوستان',
-              onChanged: (value) {
-                _initFriendsPolicy(value);
-                setState(() {});
-              },
-              items: cubit.state.soldiers.values
-                  .skipWhile((value) => value.id == widget.soldier!.id!)
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.id!,
-                      child: Text("${e.firstName} ${e.lastName}"),
-                    ),
-                  )
-                  .toList(),
-              name: 'value',
-            ),
+          FormBuilderMultiDropdown(
+            label: 'دوستان',
+            onChanged: (value) {
+              _initFriendsPolicy(value);
+              setState(() {});
+            },
+            items: cubit.state.soldiers.values
+                .skipWhile((value) => value.id == widget.soldier!.id!)
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e.id!,
+                    child: Text("${e.firstName} ${e.lastName}"),
+                  ),
+                )
+                .toList(),
+            name: 'value',
+          ),
         ];
         break;
 
       case PostPolicyType.weekOffDays:
+        if (soldierId == null) break;
+
         priority = Priority.low;
         widgets = [
-          if (soldierId != null)
-            FormBuilderMultiDropdown(
-              label: 'روزهای آف',
+          FormBuilderMultiDropdown(
+            label: 'روزهای آف',
 
-              items: Weekday.values
-                  .map(
-                    (e) =>
-                        DropdownMenuItem(value: e.index, child: Text(e.name)),
-                  )
-                  .toList(),
-              name: 'value',
-              onChanged: (value) {
-                _initWeekOffDaysPolicy(value);
-                setState(() {});
-              },
-            ),
+            items: Weekday.values
+                .map(
+                  (e) => DropdownMenuItem(value: e.index, child: Text(e.name)),
+                )
+                .toList(),
+            name: 'value',
+            onChanged: (value) {
+              _initWeekOffDaysPolicy(value);
+              setState(() {});
+            },
+          ),
         ];
         break;
 
@@ -236,6 +236,8 @@ class _PolicyFormState extends State<PolicyForm> {
         break;
 
       case PostPolicyType.equalHolidayPost:
+        if (soldierId != null) break;
+
         priority = Priority.medium;
         widgets = [];
         editing = PostPolicy.equalHolidayPost();
@@ -243,6 +245,8 @@ class _PolicyFormState extends State<PolicyForm> {
         break;
 
       case PostPolicyType.equalPostDifficulty:
+        if (soldierId != null) break;
+
         priority = Priority.medium;
         widgets = [];
         editing = PostPolicy.equalPostDifficulty();
@@ -353,104 +357,104 @@ class _PolicyFormState extends State<PolicyForm> {
     widget.onCleared?.call();
   }
 
-  late bool isEdit;
-
   @override
   Widget build(BuildContext context) {
-    return BaseForm(
-      // key: formKey,
-      addButtonLabel: !isEdit ? 'افزودن سیاست' : 'ویرایش   سیاست',
-      clearButtonLabel: 'پاک کردن فرم',
-      clearButtonBehavior: ClearButtonBehavior.clear,
-      initialValue: editing?.toFormValues() ?? {},
-      onSubmit: (value) {
-        if (editing is StagedPostPolicy) {
-          editing =
-              (editing as StagedPostPolicy).copyWith(
-                    stagePriority: conscriptionStages,
-                  )
-                  as PostPolicy;
-        }
-        widget.onSubmit?.call(editing!);
-        _clear();
-      },
-      onClear: () {
-        _clear();
-      },
-      builder: (context, formKey) {
-        final widgets = type == null ? [] : getPolicyWidget(formKey);
-
-        return Column(
-          spacing: 12.0,
-          children: [
-            InputDecorator(
-              decoration: InputDecoration(
-                labelText: 'نوع سیاست',
-                hintText: 'نوع سیاست را انتخاب کنید',
-                isCollapsed: true,
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton(
-                  isExpanded: true,
-                  value: type,
-                  items: types.map((e) {
-                    return DropdownMenuItem(value: e, child: Text(e.title));
-                  }).toList(),
-                  selectedItemBuilder: (context) =>
-                      types.map((e) => Center(child: Text(e.title))).toList(),
-                  onChanged: (PostPolicyType? value) {
-                    setState(() {
-                      type = value;
-                      conscriptionStages = null;
-                    });
-                  },
-                ),
-              ),
-            ),
-            if (type != null) ...widgets,
-            if (priority != null)
-              FormBuilderDropdown(
-                name: 'priority',
-                decoration: const InputDecoration(labelText: ' الویت سیاست'),
-                initialValue: priority!.index,
-                items: Priority.values
-                    .map(
-                      (e) => DropdownMenuItem(
-                        value: e.index,
-                        child: Text(e.nameFa),
-                      ),
+    return SingleChildScrollView(
+      child: BaseForm(
+        // key: formKey,
+        addButtonLabel: !isEdit ? 'افزودن سیاست' : 'ویرایش   سیاست',
+        clearButtonLabel: 'پاک کردن فرم',
+        clearButtonBehavior: ClearButtonBehavior.clear,
+        initialValue: editing?.toFormValues() ?? {},
+        onSubmit: (value) {
+          if (editing is StagedPostPolicy) {
+            editing =
+                (editing as StagedPostPolicy).copyWith(
+                      stagePriority: conscriptionStages,
                     )
-                    .toList(),
-                onChanged: (value) {
-                  priority = Priority.values[value!];
-                  // setState(() {});
-                },
-              ),
-            if (conscriptionStages != null)
-              Form(
-                child: InputDecorator(
-                  decoration: const InputDecoration(isCollapsed: true),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      spacing: 12,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (conscriptionStages!.isNotEmpty)
-                          ...conscriptionStages!.keys.map(
-                            _conscriptionStageFieldBuilder!,
-                          ),
+                    as PostPolicy;
+          }
+          widget.onSubmit?.call(editing!.copyWith(priority: priority));
+          _clear();
+        },
+        onClear: () {
+          _clear();
+        },
+        builder: (context, formKey) {
+          final widgets = type == null ? [] : getPolicyWidget(formKey);
 
-                        _conscriptionStageFieldBuilder!(null),
-                      ],
-                    ),
+          return Column(
+            spacing: 12.0,
+            children: [
+              InputDecorator(
+                decoration: InputDecoration(
+                  labelText: 'نوع سیاست',
+                  hintText: 'نوع سیاست را انتخاب کنید',
+                  isCollapsed: true,
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton(
+                    isExpanded: true,
+                    value: type,
+                    items: types.map((e) {
+                      return DropdownMenuItem(value: e, child: Text(e.title));
+                    }).toList(),
+                    selectedItemBuilder: (context) =>
+                        types.map((e) => Center(child: Text(e.title))).toList(),
+                    onChanged: (PostPolicyType? value) {
+                      setState(() {
+                        type = value;
+                        conscriptionStages = null;
+                      });
+                    },
                   ),
                 ),
               ),
-          ],
-        );
-      },
-      title: "افزودن سیاست",
+              if (type != null) ...widgets,
+              if (priority != null)
+                FormBuilderDropdown(
+                  name: 'priority',
+                  decoration: const InputDecoration(labelText: ' الویت سیاست'),
+                  initialValue: priority!.index,
+                  items: Priority.values
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e.index,
+                          child: Text(e.nameFa),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    priority = Priority.values[value!];
+                    // setState(() {});
+                  },
+                ),
+              if (conscriptionStages != null && soldierId == null)
+                Form(
+                  child: InputDecorator(
+                    decoration: const InputDecoration(isCollapsed: true),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        spacing: 12,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (conscriptionStages!.isNotEmpty)
+                            ...conscriptionStages!.keys.map(
+                              _conscriptionStageFieldBuilder!,
+                            ),
+
+                          _conscriptionStageFieldBuilder!(null),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+        title: "افزودن سیاست",
+      ),
     );
   }
 }

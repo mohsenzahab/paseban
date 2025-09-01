@@ -8,11 +8,18 @@ import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
 import 'package:paseban/presentation/forms/base_form.dart';
 
 import '../../domain/enums.dart';
+import '../../domain/models/post_policies.dart';
 import '../../domain/models/soldier.dart';
+import '../tiles/policy_tile.dart';
+import 'policy_form.dart';
 
 class SoldierForm extends StatefulWidget {
   const SoldierForm({super.key, this.soldier});
+
   final Soldier? soldier;
+
+  @override
+  State<SoldierForm> createState() => _SoldierFormState();
 
   static Future<T?> show<T>(BuildContext context, {Soldier? soldier}) {
     return showDialog<T>(
@@ -20,19 +27,19 @@ class SoldierForm extends StatefulWidget {
       builder: (context) => Dialog(child: SoldierForm(soldier: soldier)),
     );
   }
-
-  @override
-  State<SoldierForm> createState() => _SoldierFormState();
 }
 
 class _SoldierFormState extends State<SoldierForm> {
-  Soldier? get soldier => widget.soldier;
-  bool get isEdit => soldier != null;
+  PostPolicy? editingPolicy;
 
   @override
   void initState() {
     super.initState();
   }
+
+  Soldier? get soldier => widget.soldier;
+
+  bool get isEdit => soldier != null;
 
   @override
   Widget build(BuildContext context) {
@@ -49,52 +56,110 @@ class _SoldierFormState extends State<SoldierForm> {
         Navigator.pop(context);
       },
       builder: (context, formKey) {
-        return Column(
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           spacing: 12.0,
           children: [
-            FormBuilderTextField(
-              name: 'firstName',
-              decoration: const InputDecoration(labelText: 'نام'),
-              keyboardType: TextInputType.name,
+            Flexible(
+              child: Column(
+                spacing: 12.0,
+                children: [
+                  FormBuilderTextField(
+                    name: 'firstName',
+                    decoration: const InputDecoration(labelText: 'نام'),
+                    keyboardType: TextInputType.name,
 
-              validator: FormBuilderValidators.required(),
-            ),
-            FormBuilderTextField(
-              name: 'lastName',
-              decoration: const InputDecoration(labelText: 'نام خانوادگی'),
-              keyboardType: TextInputType.name,
-              validator: FormBuilderValidators.required(),
-            ),
+                    validator: FormBuilderValidators.required(),
+                  ),
+                  FormBuilderTextField(
+                    name: 'lastName',
+                    decoration: const InputDecoration(
+                      labelText: 'نام خانوادگی',
+                    ),
+                    keyboardType: TextInputType.name,
+                    validator: FormBuilderValidators.required(),
+                  ),
 
-            FormBuilderDropdown(
-              name: 'rank',
-              decoration: const InputDecoration(labelText: 'درجه'),
-              items: MilitaryRank.values.map((e) {
-                return DropdownMenuItem(value: e.index, child: Text(e.faName));
-              }).toList(),
-              validator: FormBuilderValidators.required(),
-            ),
+                  FormBuilderDropdown(
+                    name: 'rank',
+                    decoration: const InputDecoration(labelText: 'درجه'),
+                    items: MilitaryRank.values.map((e) {
+                      return DropdownMenuItem(
+                        value: e.index,
+                        child: Text(e.faName),
+                      );
+                    }).toList(),
+                    validator: FormBuilderValidators.required(),
+                  ),
 
-            FormBuilderJalaliDatePicker(
-              name: 'dateOfEnlistment',
-              label: 'تاریخ اعزام',
+                  FormBuilderJalaliDatePicker(
+                    name: 'dateOfEnlistment',
+                    label: 'تاریخ اعزام',
+                  ),
+                  FormBuilderTextField(
+                    name: 'nickName',
+                    decoration: const InputDecoration(labelText: 'نام مستعار'),
+                    keyboardType: TextInputType.name,
+                  ),
+                  FormBuilderTextField(
+                    name: 'militaryId',
+                    decoration: const InputDecoration(labelText: 'شناسه'),
+                  ),
+                  FormBuilderTextField(
+                    name: 'phoneNumber',
+                    decoration: const InputDecoration(labelText: 'شماره تماس'),
+                  ),
+                  FormBuilderDateTimePicker(
+                    name: 'dateOfBirth',
+                    decoration: const InputDecoration(labelText: 'تاریخ تولد'),
+                  ),
+                ],
+              ),
             ),
-            FormBuilderTextField(
-              name: 'nickName',
-              decoration: const InputDecoration(labelText: 'نام مستعار'),
-              keyboardType: TextInputType.name,
-            ),
-            FormBuilderTextField(
-              name: 'militaryId',
-              decoration: const InputDecoration(labelText: 'شناسه'),
-            ),
-            FormBuilderTextField(
-              name: 'phoneNumber',
-              decoration: const InputDecoration(labelText: 'شماره تماس'),
-            ),
-            FormBuilderDateTimePicker(
-              name: 'dateOfBirth',
-              decoration: const InputDecoration(labelText: 'تاریخ تولد'),
+            Flexible(
+              child: BlocBuilder<MonthlyPostTableCubit, MonthlyPostTableState>(
+                builder: (context, state) {
+                  final policies = state.soldierPolicies[soldier!.id];
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: (policies?.length ?? 0) + 1,
+                    itemBuilder: (context, index) {
+                      if (index == (policies?.length ?? 0)) {
+                        return PolicyForm(
+                          policy: editingPolicy,
+                          soldier: soldier,
+                          onCleared: () => setState(() {
+                            editingPolicy = null;
+                          }),
+                          onSubmit: (value) {
+                            setState(() {
+                              if (editingPolicy == null) {
+                                context.read<MonthlyPostTableCubit>().addPolicy(
+                                  value,
+                                );
+                              } else {
+                                context
+                                    .read<MonthlyPostTableCubit>()
+                                    .editPolicy(value, editingPolicy!.id!);
+                              }
+                              editingPolicy = null;
+                            });
+                          },
+                        );
+                      }
+                      final policy = policies![index];
+                      return PolicyTile(
+                        policy: policy,
+                        onEdit: (value) {
+                          setState(() {
+                            editingPolicy = policy;
+                          });
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         );
@@ -111,9 +176,9 @@ class FormBuilderJalaliDatePicker extends StatelessWidget {
     this.onChanged,
   });
 
-  final String name;
-  final String label;
   final void Function(DateTime? value)? onChanged;
+  final String label;
+  final String name;
 
   @override
   Widget build(BuildContext context) {

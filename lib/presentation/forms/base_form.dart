@@ -43,7 +43,10 @@ class _BaseFormState extends State<BaseForm> {
         border: Border.all(),
         borderRadius: BorderRadius.circular(20),
       ),
-      constraints: BoxConstraints(maxWidth: 400),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+        minWidth: 400,
+      ),
       padding: const EdgeInsets.all(8.0),
       margin: const EdgeInsets.all(8.0),
       child: Column(

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:paseban/domain/models/models.dart';
 import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
 import 'package:paseban/presentation/forms/policy_form.dart';
+import 'package:paseban/presentation/tiles/policy_tile.dart';
 
 class PoliciesScreen extends StatefulWidget {
   const PoliciesScreen({super.key});
@@ -31,58 +32,39 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
                     itemCount: policies.length,
                     itemBuilder: (context, index) {
                       final policy = policies[index];
-                      final value = switch (policy) {
-                        ValuePostPolicy p => p.value.toString(),
 
-                        EqualHolidayPost() || EqualPostDifficulty() => null,
-                      };
-                      return ListTile(
-                        title: Text(policy.title),
-                        leading: Text(policy.priority.nameFa),
-                        subtitle: value != null ? Text(value) : null,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                editingPolicy = policy;
-                                setState(() {});
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                context
-                                    .read<MonthlyPostTableCubit>()
-                                    .removePolicy(policy);
-                              },
-                            ),
-                          ],
-                        ),
+                      return PolicyTile(
+                        policy: policy,
+                        onEdit: (value) {
+                          editingPolicy = policy;
+                          setState(() {});
+                        },
                       );
                     },
                   );
                 },
               ),
             ),
-            PolicyForm(
-              policy: editingPolicy,
-              onCleared: () {
-                setState(() {
-                  editingPolicy = null;
-                });
-              },
-              onSubmit: (value) {
-                if (editingPolicy != null) {
-                  context.read<MonthlyPostTableCubit>().editPolicy(
-                    value,
-                    editingPolicy!.id!,
-                  );
-                } else {
-                  context.read<MonthlyPostTableCubit>().addPolicy(value);
-                }
-              },
+            Flexible(
+              flex: 2,
+              child: PolicyForm(
+                policy: editingPolicy,
+                onCleared: () {
+                  setState(() {
+                    editingPolicy = null;
+                  });
+                },
+                onSubmit: (value) {
+                  if (editingPolicy != null) {
+                    context.read<MonthlyPostTableCubit>().editPolicy(
+                      value,
+                      editingPolicy!.id!,
+                    );
+                  } else {
+                    context.read<MonthlyPostTableCubit>().addPolicy(value);
+                  }
+                },
+              ),
             ),
           ],
         ),
