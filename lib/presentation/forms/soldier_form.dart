@@ -119,7 +119,9 @@ class _SoldierFormState extends State<SoldierForm> {
             Flexible(
               child: BlocBuilder<MonthlyPostTableCubit, MonthlyPostTableState>(
                 builder: (context, state) {
-                  final policies = state.soldierPolicies[soldier!.id];
+                  final policies = soldier == null
+                      ? []
+                      : state.soldierPolicies[soldier!.id];
                   return ListView.builder(
                     shrinkWrap: true,
                     itemCount: (policies?.length ?? 0) + 1,

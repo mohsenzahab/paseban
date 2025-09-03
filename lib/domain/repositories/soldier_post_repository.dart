@@ -11,7 +11,9 @@ class SoldierPostRepository {
   SoldierPostRepository(this.db);
 
   Future<int> insert(SoldierPost post) {
-    return db.into(db.soldierPostsTable).insert(post.toCompanion());
+    return db
+        .into(db.soldierPostsTable)
+        .insert(post.toCompanion(), mode: InsertMode.replace);
   }
 
   Future<List<SoldierPost>> getSoldierPostsFromRange(

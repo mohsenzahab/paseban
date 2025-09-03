@@ -5,19 +5,21 @@ class MonthlyPostTableState extends BlocState {
     super.status, {
     required this.soldiers,
     required this.guardPosts,
-    required this.soldierPosts,
+    required this.soldiersPosts,
     required this.publicPolicies,
     required this.soldierPolicies,
+    required this.holidays,
     DateTimeRange? dateRange,
     super.message,
   }) : _dateRange = dateRange;
 
   const MonthlyPostTableState.initial()
-    : soldierPosts = const {},
+    : soldiersPosts = const {},
       guardPosts = const {},
       soldiers = const {},
       soldierPolicies = const {},
       publicPolicies = const [],
+      holidays = const {},
       _dateRange = null,
       super(BlocStatus.loading);
 
@@ -27,6 +29,7 @@ class MonthlyPostTableState extends BlocState {
     required List<GuardPost> guardPosts,
     required List<SoldierPost> posts,
     required List<PostPolicy> policies,
+    required Set<DateTime> holidays,
     required DateTimeRange? dateRange,
     String? message,
   }) {
@@ -35,15 +38,16 @@ class MonthlyPostTableState extends BlocState {
       status,
       soldiers: _initSoldiers(soldiers),
       guardPosts: _initGuardPosts(guardPosts),
-      soldierPosts: _initSoldierPosts(posts),
+      soldiersPosts: _initSoldierPosts(posts),
       publicPolicies: publicPolicies,
       soldierPolicies: soldierPolicies,
+      holidays: holidays,
       dateRange: dateRange,
       message: message,
     );
   }
 
-  final Map<int, Map<DateTime, SoldierPost>> soldierPosts;
+  final Map<int, Map<DateTime, SoldierPost>> soldiersPosts;
   // each map contains the post id as key and the GuardPost object as value
   final Map<int, GuardPost> guardPosts;
 
@@ -52,6 +56,8 @@ class MonthlyPostTableState extends BlocState {
   final List<PostPolicy> publicPolicies;
 
   final Map<int, List<PostPolicy>> soldierPolicies;
+
+  final Set<DateTime> holidays;
 
   final DateTimeRange? _dateRange;
 
@@ -65,10 +71,11 @@ class MonthlyPostTableState extends BlocState {
   @override
   List<Object> get props => [
     guardPosts,
-    soldierPosts,
+    soldiersPosts,
     soldiers,
     publicPolicies,
     soldierPolicies,
+    holidays,
   ];
 
   @override
@@ -78,6 +85,7 @@ class MonthlyPostTableState extends BlocState {
     List<GuardPost>? guardPosts,
     List<PostPolicy>? policies,
     List<SoldierPost>? posts,
+    List<DateTime>? holidays,
     DateTimeRange? dateRange,
     String? message,
   }) {
@@ -91,9 +99,10 @@ class MonthlyPostTableState extends BlocState {
       guardPosts: guardPosts != null
           ? _initGuardPosts(guardPosts)
           : this.guardPosts,
-      soldierPosts: posts != null ? _initSoldierPosts(posts) : soldierPosts,
+      soldiersPosts: posts != null ? _initSoldierPosts(posts) : soldiersPosts,
       publicPolicies: publicPolicies,
       soldierPolicies: soldierPolicies,
+      holidays: holidays?.toSet() ?? this.holidays,
       dateRange: dateRange ?? _dateRange,
     );
   }

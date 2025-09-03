@@ -1,9 +1,12 @@
+import 'dart:developer';
+
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:paseban/core/bloc/bloc_messenger.dart';
 import 'package:paseban/core/bloc/state.dart';
 import 'package:paseban/core/utils/date_helper.dart';
 import 'package:paseban/data/db/app_database.dart';
+import 'package:paseban/domain/repositories/calendar_repository.dart';
 import 'package:paseban/domain/repositories/guard_post_repository.dart';
 import 'package:paseban/domain/repositories/post_policy_repository.dart';
 import 'package:paseban/domain/repositories/soldier_post_repository.dart';
@@ -22,6 +25,7 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
     this.guardPostRepository,
     this.policyRepository,
     this.soldierPostRepository,
+    this.calendarRepository,
   ) : super(const MonthlyPostTableState.initial()) {
     _init();
   }
@@ -31,15 +35,19 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
   final GuardPostRepository guardPostRepository;
   final PostPolicyRepository policyRepository;
   final SoldierPostRepository soldierPostRepository;
+  final CalendarRepository calendarRepository;
 
   void _init() {
-    final sDate = DateTime.now().monthStartDate(CalendarMode.jalali);
-    final eDate = DateTime.now().monthEndDate(CalendarMode.jalali);
+    final sDate = DateTime.now().monthStartDate(CalendarMode.jalali).dateOnly;
+    final eDate = DateTime.now().monthEndDate(CalendarMode.jalali).dateOnly;
     final futures = Future.wait([
       soldierRepository.getAll(),
       guardPostRepository.getAll(),
       policyRepository.getAll(),
       soldierPostRepository.getSoldierPostsFromRange(
+        DateTimeRange(start: sDate, end: eDate),
+      ),
+      calendarRepository.getHolidaysInRange(
         DateTimeRange(start: sDate, end: eDate),
       ),
     ]);
@@ -49,6 +57,8 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
           final soldiers = results[0] as List<Soldier>;
           final guardPosts = results[1] as List<GuardPost>;
           final policies = results[2] as List<PostPolicy>;
+          final soldiersPosts = results[3] as List<SoldierPost>;
+          final holidays = results[4] as List<DateTime>;
 
           emit(
             state.copyWith(
@@ -56,6 +66,9 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
               soldiers: soldiers,
               guardPosts: guardPosts,
               policies: policies,
+              posts: soldiersPosts,
+              holidays: holidays,
+              dateRange: DateTimeRange(start: sDate, end: eDate),
             ),
           );
         })
@@ -172,5 +185,41 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
     } else {
       addError('سیاست ویرایش نشد');
     }
+  }
+
+  Future<void> updateSoldierPost(SoldierPost post) async {
+    // log('Updating soldier post:$post');
+    final result = await soldierPostRepository.insert(post);
+    if (result != -1) {
+      final posts = await soldierPostRepository.getSoldierPostsFromRange(
+        DateTimeRange(start: state.dateRange.start, end: state.dateRange.end),
+      );
+      log('Getting soldier posts');
+      emit(state.copyWith(BlocStatus.ready, posts: posts));
+      // addSuccess('سیاست ویرایش شد');
+    } else {
+      addError('ویرایش پست ناموفق ');
+    }
+  }
+
+  void deleteSoldierPost(SoldierPost oldValue) async {
+    soldierPostRepository.delete(oldValue.soldierId, oldValue.date);
+    final posts = await soldierPostRepository.getSoldierPostsFromRange(
+      DateTimeRange(start: state.dateRange.start, end: state.dateRange.end),
+    );
+    emit(state.copyWith(BlocStatus.ready, posts: posts));
+  }
+
+  void toggleHoliday(DateTime date) async {
+    final exists = state.holidays.contains(date);
+    if (exists) {
+      await calendarRepository.deleteHoliday(date);
+    } else {
+      await calendarRepository.insertHoliday(date);
+    }
+    final holidays = await calendarRepository.getHolidaysInRange(
+      state.dateRange,
+    );
+    emit(state.copyWith(BlocStatus.ready, holidays: holidays));
   }
 }

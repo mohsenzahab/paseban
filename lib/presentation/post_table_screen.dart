@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:paseban/app/locator.dart';
 import 'package:paseban/core/bloc/widgets/bloc_message_listener.dart';
+import 'package:paseban/domain/models/soldier_post.dart';
 import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
 import 'package:paseban/presentation/policies_screen.dart';
+import 'package:path/path.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 import '../core/utils/date_helper.dart';
+import '../domain/enums.dart';
+import '../domain/models/guard_post.dart';
 import '../domain/models/soldier.dart';
 import 'forms/soldier_form.dart';
 import 'posts_screen.dart';
@@ -57,25 +62,26 @@ class PostTableScreen extends StatelessWidget {
 }
 
 class GuardDataSource extends DataGridSource {
-  GuardDataSource(List<Soldier> guards, MonthlyPostTableState state) {
+  GuardDataSource(List<Soldier> guards, this.state) {
     final range = state.dateRange;
 
     soldiers =
         (guards..sort(
               (a, b) => a.dateOfEnlistment.compareTo(b.dateOfEnlistment),
             ))
-            .map((e) {
+            .map((soldier) {
+              final soldierPosts = state.soldiersPosts[soldier.id] ?? {};
               final cells = [
-                DataGridCell<Soldier>(columnName: 'name', value: e),
+                DataGridCell<Soldier>(columnName: 'name', value: soldier),
                 ...[
                   for (
                     var i = range.start;
                     !i.isAfter(range.end);
                     i = i.add(Duration(days: 1))
                   )
-                    DataGridCell<String>(
-                      columnName: i.toIso8601String(),
-                      value: 'N/A',
+                    DataGridCell<SoldierPost>(
+                      columnName: i.dateOnly.toIso8601String(),
+                      value: soldierPosts[i],
                     ),
                 ],
               ];
@@ -85,14 +91,91 @@ class GuardDataSource extends DataGridSource {
   }
 
   List<DataGridRow> soldiers = [];
+  final MonthlyPostTableState state;
+
+  dynamic newCellValue;
 
   @override
-  List<DataGridRow> get rows => soldiers;
+  Widget? buildEditWidget(
+    DataGridRow dataGridRow,
+    RowColumnIndex rowColumnIndex,
+    GridColumn column,
+    CellSubmit submitCell,
+  ) {
+    newCellValue = null;
+    final guardPosts = state.guardPosts;
+    final Soldier soldier = dataGridRow.getCells()[0].value;
+    final soldierPosts = state.soldiersPosts[soldier.id] ?? {};
+    final SoldierPost? value = dataGridRow
+        .getCells()[rowColumnIndex.columnIndex]
+        .value;
+    final date = DateTime.tryParse(column.columnName);
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<GuardPost>(
+        isExpanded: true,
+        value: value == null ? null : guardPosts[value.guardPostId],
+        items: [
+          ...guardPosts.values.map((e) {
+            return DropdownMenuItem(
+              value: e,
+              child: FittedBox(child: Text(e.title)),
+            );
+          }),
+          DropdownMenuItem(value: null, child: Text('_')),
+        ],
+        onChanged: (value) {
+          if (value == null) {
+            newCellValue = null;
+          } else {
+            newCellValue = SoldierPost(
+              soldierId: soldier.id!,
+              guardPostId: value.id!,
+              date: date!,
+              editType: EditType.manual,
+            );
+          }
+          submitCell();
+        },
+      ),
+    );
+  }
+
+  @override
+  Future<void> onCellSubmit(
+    DataGridRow dataGridRow,
+    RowColumnIndex rowColumnIndex,
+    GridColumn column,
+  ) async {
+    final SoldierPost? newValue = newCellValue;
+    final SoldierPost? oldValue = dataGridRow
+        .getCells()[rowColumnIndex.columnIndex]
+        .value;
+    if (newValue != oldValue) {
+      if (newValue == null) {
+        if (oldValue != null) {
+          sl<MonthlyPostTableCubit>().deleteSoldierPost(oldValue);
+          return;
+        } else {
+          return;
+        }
+      }
+      // final date = DateTime.tryParse(column.columnName);
+      // final rowIndex = rows.indexOf(dataGridRow);
+      // rows[rowIndex]
+      //     .getCells()[rowColumnIndex.columnIndex] = DataGridCell<SoldierPost>(
+      //   columnName: column.columnName,
+      //   value: newValue,
+      // );
+      return sl<MonthlyPostTableCubit>().updateSoldierPost(newValue);
+    }
+  }
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     return DataGridRowAdapter(
       cells: row.getCells().map((cell) {
+        final date = DateTime.tryParse(cell.columnName);
+        final color = date == null ? null : _cellColor(date, state);
         final value = cell.value;
         if (value is Soldier) {
           return Container(
@@ -100,22 +183,36 @@ class GuardDataSource extends DataGridSource {
             padding: const EdgeInsets.all(8.0),
             child: Text('${value.firstName} ${value.lastName}'),
           );
+        } else if (value is SoldierPost) {
+          return Container(
+            color: color,
+
+            alignment: Alignment.center,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(state.guardPosts[value.guardPostId]!.title),
+          );
         }
         return Container(
+          color: color,
+
           alignment: Alignment.center,
           padding: const EdgeInsets.all(8.0),
-          child: Text(value.toString()),
+          child: Text('_'),
         );
       }).toList(),
     );
   }
+
+  @override
+  List<DataGridRow> get rows => soldiers;
 }
 
 class GuardTable extends StatelessWidget {
   const GuardTable({super.key});
 
   @override
-  Widget build(BuildContext _) {
+  Widget build(BuildContext context) {
+    final cubit = BlocProvider.of<MonthlyPostTableCubit>(context);
     return BlocBuilder<MonthlyPostTableCubit, MonthlyPostTableState>(
       builder: (context, state) {
         final dataSource = GuardDataSource(
@@ -124,6 +221,7 @@ class GuardTable extends StatelessWidget {
         );
         final columns = [
           GridColumn(
+            allowEditing: false,
             columnName: 'soldier',
             label: Container(
               alignment: Alignment.center,
@@ -138,14 +236,11 @@ class GuardTable extends StatelessWidget {
             i = i.add(Duration(days: 1))
           )
             GridColumn(
+              allowEditing: true,
               columnName: i.toIso8601String(),
               label: Container(
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: i.weekDay(CalendarMode.jalali) == 7
-                      ? Colors.red
-                      : Colors.white,
-                ),
+                decoration: BoxDecoration(color: _cellColor(i, state)),
                 padding: const EdgeInsets.all(8.0),
                 child: Text('${i.jf.wN} ${i.jf.dd}'),
               ),
@@ -154,13 +249,25 @@ class GuardTable extends StatelessWidget {
         return SfDataGrid(
           source: dataSource,
           columns: columns,
+          navigationMode: GridNavigationMode.cell,
+          selectionMode: SelectionMode.single,
+          editingGestureType: EditingGestureType.tap,
+          allowEditing: true,
           onCellTap: (details) {
             final row = details.rowColumnIndex.rowIndex - 1;
             final column = details.rowColumnIndex.columnIndex;
-            final value = dataSource.soldiers[row].getCells()[column].value;
-            if (details.column.columnName == 'soldier') {
-              SoldierForm.show(context, soldier: value);
+            if (row == -1) {
+              if (column > 0) {
+                final date = DateTime.parse(details.column.columnName);
+                cubit.toggleHoliday(date);
+              }
+              return;
             }
+            final soldier =
+                dataSource.soldiers[row].getCells()[0].value as Soldier;
+            if (details.column.columnName == 'soldier') {
+              SoldierForm.show(context, soldier: soldier);
+            } else {}
           },
           onCellLongPress: (details) {
             final row = details.rowColumnIndex.rowIndex - 1;
@@ -212,3 +319,11 @@ class GuardTable extends StatelessWidget {
     );
   }
 }
+
+Color _cellColor(DateTime i, MonthlyPostTableState state) {
+  return i.weekDay(CalendarMode.jalali) == 7 || state.holidays.contains(i)
+      ? kColorHoliday
+      : Colors.white;
+}
+
+const kColorHoliday = Colors.redAccent;
