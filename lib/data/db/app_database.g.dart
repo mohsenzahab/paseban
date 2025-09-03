@@ -1458,6 +1458,19 @@ class $SoldierPostsTableTable extends SoldierPostsTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SoldierPostsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
   static const VerificationMeta _soldierMeta = const VerificationMeta(
     'soldier',
   );
@@ -1479,9 +1492,9 @@ class $SoldierPostsTableTable extends SoldierPostsTable
   late final GeneratedColumn<int> guardPost = GeneratedColumn<int>(
     'guard_post',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES guard_posts_table (id) ON UPDATE SET NULL ON DELETE SET NULL',
     ),
@@ -1508,7 +1521,13 @@ class $SoldierPostsTableTable extends SoldierPostsTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [soldier, guardPost, editType, date];
+  List<GeneratedColumn> get $columns => [
+    id,
+    soldier,
+    guardPost,
+    editType,
+    date,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1521,6 +1540,9 @@ class $SoldierPostsTableTable extends SoldierPostsTable
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
     if (data.containsKey('soldier')) {
       context.handle(
         _soldierMeta,
@@ -1534,8 +1556,6 @@ class $SoldierPostsTableTable extends SoldierPostsTable
         _guardPostMeta,
         guardPost.isAcceptableOrUnknown(data['guard_post']!, _guardPostMeta),
       );
-    } else if (isInserting) {
-      context.missing(_guardPostMeta);
     }
     if (data.containsKey('edit_type')) {
       context.handle(
@@ -1555,15 +1575,19 @@ class $SoldierPostsTableTable extends SoldierPostsTable
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => const {};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-    {soldier, guardPost, date},
+    {soldier, date},
   ];
   @override
   SoldierPostsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SoldierPostsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
       soldier: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}soldier'],
@@ -1571,7 +1595,7 @@ class $SoldierPostsTableTable extends SoldierPostsTable
       guardPost: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}guard_post'],
-      )!,
+      ),
       editType: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}edit_type'],
@@ -1591,21 +1615,26 @@ class $SoldierPostsTableTable extends SoldierPostsTable
 
 class SoldierPostsTableData extends DataClass
     implements Insertable<SoldierPostsTableData> {
+  final int id;
   final int soldier;
-  final int guardPost;
+  final int? guardPost;
   final int editType;
   final DateTime date;
   const SoldierPostsTableData({
+    required this.id,
     required this.soldier,
-    required this.guardPost,
+    this.guardPost,
     required this.editType,
     required this.date,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
     map['soldier'] = Variable<int>(soldier);
-    map['guard_post'] = Variable<int>(guardPost);
+    if (!nullToAbsent || guardPost != null) {
+      map['guard_post'] = Variable<int>(guardPost);
+    }
     map['edit_type'] = Variable<int>(editType);
     map['date'] = Variable<DateTime>(date);
     return map;
@@ -1613,8 +1642,11 @@ class SoldierPostsTableData extends DataClass
 
   SoldierPostsTableCompanion toCompanion(bool nullToAbsent) {
     return SoldierPostsTableCompanion(
+      id: Value(id),
       soldier: Value(soldier),
-      guardPost: Value(guardPost),
+      guardPost: guardPost == null && nullToAbsent
+          ? const Value.absent()
+          : Value(guardPost),
       editType: Value(editType),
       date: Value(date),
     );
@@ -1626,8 +1658,9 @@ class SoldierPostsTableData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SoldierPostsTableData(
+      id: serializer.fromJson<int>(json['id']),
       soldier: serializer.fromJson<int>(json['soldier']),
-      guardPost: serializer.fromJson<int>(json['guardPost']),
+      guardPost: serializer.fromJson<int?>(json['guardPost']),
       editType: serializer.fromJson<int>(json['editType']),
       date: serializer.fromJson<DateTime>(json['date']),
     );
@@ -1636,26 +1669,30 @@ class SoldierPostsTableData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
       'soldier': serializer.toJson<int>(soldier),
-      'guardPost': serializer.toJson<int>(guardPost),
+      'guardPost': serializer.toJson<int?>(guardPost),
       'editType': serializer.toJson<int>(editType),
       'date': serializer.toJson<DateTime>(date),
     };
   }
 
   SoldierPostsTableData copyWith({
+    int? id,
     int? soldier,
-    int? guardPost,
+    Value<int?> guardPost = const Value.absent(),
     int? editType,
     DateTime? date,
   }) => SoldierPostsTableData(
+    id: id ?? this.id,
     soldier: soldier ?? this.soldier,
-    guardPost: guardPost ?? this.guardPost,
+    guardPost: guardPost.present ? guardPost.value : this.guardPost,
     editType: editType ?? this.editType,
     date: date ?? this.date,
   );
   SoldierPostsTableData copyWithCompanion(SoldierPostsTableCompanion data) {
     return SoldierPostsTableData(
+      id: data.id.present ? data.id.value : this.id,
       soldier: data.soldier.present ? data.soldier.value : this.soldier,
       guardPost: data.guardPost.present ? data.guardPost.value : this.guardPost,
       editType: data.editType.present ? data.editType.value : this.editType,
@@ -1666,6 +1703,7 @@ class SoldierPostsTableData extends DataClass
   @override
   String toString() {
     return (StringBuffer('SoldierPostsTableData(')
+          ..write('id: $id, ')
           ..write('soldier: $soldier, ')
           ..write('guardPost: $guardPost, ')
           ..write('editType: $editType, ')
@@ -1675,11 +1713,12 @@ class SoldierPostsTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(soldier, guardPost, editType, date);
+  int get hashCode => Object.hash(id, soldier, guardPost, editType, date);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SoldierPostsTableData &&
+          other.id == this.id &&
           other.soldier == this.soldier &&
           other.guardPost == this.guardPost &&
           other.editType == this.editType &&
@@ -1688,62 +1727,64 @@ class SoldierPostsTableData extends DataClass
 
 class SoldierPostsTableCompanion
     extends UpdateCompanion<SoldierPostsTableData> {
+  final Value<int> id;
   final Value<int> soldier;
-  final Value<int> guardPost;
+  final Value<int?> guardPost;
   final Value<int> editType;
   final Value<DateTime> date;
-  final Value<int> rowid;
   const SoldierPostsTableCompanion({
+    this.id = const Value.absent(),
     this.soldier = const Value.absent(),
     this.guardPost = const Value.absent(),
     this.editType = const Value.absent(),
     this.date = const Value.absent(),
-    this.rowid = const Value.absent(),
   });
   SoldierPostsTableCompanion.insert({
+    this.id = const Value.absent(),
     required int soldier,
-    required int guardPost,
+    this.guardPost = const Value.absent(),
     this.editType = const Value.absent(),
     required DateTime date,
-    this.rowid = const Value.absent(),
   }) : soldier = Value(soldier),
-       guardPost = Value(guardPost),
        date = Value(date);
   static Insertable<SoldierPostsTableData> custom({
+    Expression<int>? id,
     Expression<int>? soldier,
     Expression<int>? guardPost,
     Expression<int>? editType,
     Expression<DateTime>? date,
-    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (id != null) 'id': id,
       if (soldier != null) 'soldier': soldier,
       if (guardPost != null) 'guard_post': guardPost,
       if (editType != null) 'edit_type': editType,
       if (date != null) 'date': date,
-      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SoldierPostsTableCompanion copyWith({
+    Value<int>? id,
     Value<int>? soldier,
-    Value<int>? guardPost,
+    Value<int?>? guardPost,
     Value<int>? editType,
     Value<DateTime>? date,
-    Value<int>? rowid,
   }) {
     return SoldierPostsTableCompanion(
+      id: id ?? this.id,
       soldier: soldier ?? this.soldier,
       guardPost: guardPost ?? this.guardPost,
       editType: editType ?? this.editType,
       date: date ?? this.date,
-      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
     if (soldier.present) {
       map['soldier'] = Variable<int>(soldier.value);
     }
@@ -1756,6 +1797,168 @@ class SoldierPostsTableCompanion
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldierPostsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('soldier: $soldier, ')
+          ..write('guardPost: $guardPost, ')
+          ..write('editType: $editType, ')
+          ..write('date: $date')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HolidaysTableTable extends HolidaysTable
+    with TableInfo<$HolidaysTableTable, HolidaysTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HolidaysTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [date];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'holidays_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HolidaysTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => const {};
+  @override
+  HolidaysTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HolidaysTableData(
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+    );
+  }
+
+  @override
+  $HolidaysTableTable createAlias(String alias) {
+    return $HolidaysTableTable(attachedDatabase, alias);
+  }
+}
+
+class HolidaysTableData extends DataClass
+    implements Insertable<HolidaysTableData> {
+  final DateTime date;
+  const HolidaysTableData({required this.date});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['date'] = Variable<DateTime>(date);
+    return map;
+  }
+
+  HolidaysTableCompanion toCompanion(bool nullToAbsent) {
+    return HolidaysTableCompanion(date: Value(date));
+  }
+
+  factory HolidaysTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HolidaysTableData(date: serializer.fromJson<DateTime>(json['date']));
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'date': serializer.toJson<DateTime>(date)};
+  }
+
+  HolidaysTableData copyWith({DateTime? date}) =>
+      HolidaysTableData(date: date ?? this.date);
+  HolidaysTableData copyWithCompanion(HolidaysTableCompanion data) {
+    return HolidaysTableData(
+      date: data.date.present ? data.date.value : this.date,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HolidaysTableData(')
+          ..write('date: $date')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => date.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HolidaysTableData && other.date == this.date);
+}
+
+class HolidaysTableCompanion extends UpdateCompanion<HolidaysTableData> {
+  final Value<DateTime> date;
+  final Value<int> rowid;
+  const HolidaysTableCompanion({
+    this.date = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HolidaysTableCompanion.insert({
+    required DateTime date,
+    this.rowid = const Value.absent(),
+  }) : date = Value(date);
+  static Insertable<HolidaysTableData> custom({
+    Expression<DateTime>? date,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (date != null) 'date': date,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HolidaysTableCompanion copyWith({Value<DateTime>? date, Value<int>? rowid}) {
+    return HolidaysTableCompanion(
+      date: date ?? this.date,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1764,10 +1967,7 @@ class SoldierPostsTableCompanion
 
   @override
   String toString() {
-    return (StringBuffer('SoldierPostsTableCompanion(')
-          ..write('soldier: $soldier, ')
-          ..write('guardPost: $guardPost, ')
-          ..write('editType: $editType, ')
+    return (StringBuffer('HolidaysTableCompanion(')
           ..write('date: $date, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1786,6 +1986,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PostPoliciesTableTable(this);
   late final $SoldierPostsTableTable soldierPostsTable =
       $SoldierPostsTableTable(this);
+  late final $HolidaysTableTable holidaysTable = $HolidaysTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1795,6 +1996,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     guardPostsTable,
     postPoliciesTable,
     soldierPostsTable,
+    holidaysTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3066,19 +3268,19 @@ typedef $$PostPoliciesTableTableProcessedTableManager =
     >;
 typedef $$SoldierPostsTableTableCreateCompanionBuilder =
     SoldierPostsTableCompanion Function({
+      Value<int> id,
       required int soldier,
-      required int guardPost,
+      Value<int?> guardPost,
       Value<int> editType,
       required DateTime date,
-      Value<int> rowid,
     });
 typedef $$SoldierPostsTableTableUpdateCompanionBuilder =
     SoldierPostsTableCompanion Function({
+      Value<int> id,
       Value<int> soldier,
-      Value<int> guardPost,
+      Value<int?> guardPost,
       Value<int> editType,
       Value<DateTime> date,
-      Value<int> rowid,
     });
 
 final class $$SoldierPostsTableTableReferences
@@ -3121,9 +3323,9 @@ final class $$SoldierPostsTableTableReferences
         ),
       );
 
-  $$GuardPostsTableTableProcessedTableManager get guardPost {
-    final $_column = $_itemColumn<int>('guard_post')!;
-
+  $$GuardPostsTableTableProcessedTableManager? get guardPost {
+    final $_column = $_itemColumn<int>('guard_post');
+    if ($_column == null) return null;
     final manager = $$GuardPostsTableTableTableManager(
       $_db,
       $_db.guardPostsTable,
@@ -3145,6 +3347,11 @@ class $$SoldierPostsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get editType => $composableBuilder(
     column: $table.editType,
     builder: (column) => ColumnFilters(column),
@@ -3211,6 +3418,11 @@ class $$SoldierPostsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get editType => $composableBuilder(
     column: $table.editType,
     builder: (column) => ColumnOrderings(column),
@@ -3277,6 +3489,9 @@ class $$SoldierPostsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
   GeneratedColumn<int> get editType =>
       $composableBuilder(column: $table.editType, builder: (column) => column);
 
@@ -3363,31 +3578,31 @@ class $$SoldierPostsTableTableTableManager
               ),
           updateCompanionCallback:
               ({
+                Value<int> id = const Value.absent(),
                 Value<int> soldier = const Value.absent(),
-                Value<int> guardPost = const Value.absent(),
+                Value<int?> guardPost = const Value.absent(),
                 Value<int> editType = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
               }) => SoldierPostsTableCompanion(
+                id: id,
                 soldier: soldier,
                 guardPost: guardPost,
                 editType: editType,
                 date: date,
-                rowid: rowid,
               ),
           createCompanionCallback:
               ({
+                Value<int> id = const Value.absent(),
                 required int soldier,
-                required int guardPost,
+                Value<int?> guardPost = const Value.absent(),
                 Value<int> editType = const Value.absent(),
                 required DateTime date,
-                Value<int> rowid = const Value.absent(),
               }) => SoldierPostsTableCompanion.insert(
+                id: id,
                 soldier: soldier,
                 guardPost: guardPost,
                 editType: editType,
                 date: date,
-                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3473,6 +3688,122 @@ typedef $$SoldierPostsTableTableProcessedTableManager =
       SoldierPostsTableData,
       PrefetchHooks Function({bool soldier, bool guardPost})
     >;
+typedef $$HolidaysTableTableCreateCompanionBuilder =
+    HolidaysTableCompanion Function({required DateTime date, Value<int> rowid});
+typedef $$HolidaysTableTableUpdateCompanionBuilder =
+    HolidaysTableCompanion Function({Value<DateTime> date, Value<int> rowid});
+
+class $$HolidaysTableTableFilterComposer
+    extends Composer<_$AppDatabase, $HolidaysTableTable> {
+  $$HolidaysTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HolidaysTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $HolidaysTableTable> {
+  $$HolidaysTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HolidaysTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HolidaysTableTable> {
+  $$HolidaysTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+}
+
+class $$HolidaysTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HolidaysTableTable,
+          HolidaysTableData,
+          $$HolidaysTableTableFilterComposer,
+          $$HolidaysTableTableOrderingComposer,
+          $$HolidaysTableTableAnnotationComposer,
+          $$HolidaysTableTableCreateCompanionBuilder,
+          $$HolidaysTableTableUpdateCompanionBuilder,
+          (
+            HolidaysTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $HolidaysTableTable,
+              HolidaysTableData
+            >,
+          ),
+          HolidaysTableData,
+          PrefetchHooks Function()
+        > {
+  $$HolidaysTableTableTableManager(_$AppDatabase db, $HolidaysTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HolidaysTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HolidaysTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HolidaysTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> date = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HolidaysTableCompanion(date: date, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required DateTime date,
+                Value<int> rowid = const Value.absent(),
+              }) => HolidaysTableCompanion.insert(date: date, rowid: rowid),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HolidaysTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HolidaysTableTable,
+      HolidaysTableData,
+      $$HolidaysTableTableFilterComposer,
+      $$HolidaysTableTableOrderingComposer,
+      $$HolidaysTableTableAnnotationComposer,
+      $$HolidaysTableTableCreateCompanionBuilder,
+      $$HolidaysTableTableUpdateCompanionBuilder,
+      (
+        HolidaysTableData,
+        BaseReferences<_$AppDatabase, $HolidaysTableTable, HolidaysTableData>,
+      ),
+      HolidaysTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3485,4 +3816,6 @@ class $AppDatabaseManager {
       $$PostPoliciesTableTableTableManager(_db, _db.postPoliciesTable);
   $$SoldierPostsTableTableTableManager get soldierPostsTable =>
       $$SoldierPostsTableTableTableManager(_db, _db.soldierPostsTable);
+  $$HolidaysTableTableTableManager get holidaysTable =>
+      $$HolidaysTableTableTableManager(_db, _db.holidaysTable);
 }

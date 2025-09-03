@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:paseban/data/db/app_database.dart';
+import 'package:paseban/domain/repositories/calendar_repository.dart';
 
 import '../domain/repositories/repositories.dart';
 import '../presentation/cubit/monthly_post_table_cubit.dart';
@@ -12,7 +13,8 @@ Future<void> initDependencies() async {
   sl.registerSingleton(GuardPostRepository(db));
   sl.registerSingleton(PostPolicyRepository(db));
   sl.registerSingleton(SoldierPostRepository(db));
+  sl.registerSingleton(CalendarRepository(db));
   sl.registerLazySingleton(
-    () => MonthlyPostTableCubit(sl(), sl(), sl(), sl(), sl()),
+    () => MonthlyPostTableCubit(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 }

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:paseban/data/db/holidays.dart';
 import 'package:paseban/data/db/soldier_posts.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
@@ -20,6 +21,7 @@ typedef IntColumnBuilder = ColumnBuilder<int>;
     GuardPostsTable,
     PostPoliciesTable,
     SoldierPostsTable,
+    HolidaysTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -33,6 +35,6 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'app.sqlite'));
-    return NativeDatabase(file);
+    return NativeDatabase.createInBackground(file);
   });
 }
