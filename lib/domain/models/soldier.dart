@@ -3,16 +3,37 @@ import 'dart:convert';
 import '../enums.dart';
 
 class Soldier {
+  /// Unique database identifier of the soldier
   final int? id;
+
+  /// First name of the soldier
   final String firstName;
+
+  /// Last name of the soldier
   final String lastName;
+
+  /// Rank of the soldier
   final MilitaryRank rank;
+
+  /// Date of enlistment of the soldier
   final DateTime dateOfEnlistment;
+
+  /// Nick name of the soldier
   final String? nikName;
+
+  /// Image url of the soldier
   final String? imageUrl;
+
+  /// Military id of the soldier
   final String? militaryId;
+
+  /// Phone number of the soldier
   final String? phoneNumber;
+
+  /// Date of birth of the soldier
   final DateTime? dateOfBirth;
+
+  /// Constructs a new soldier with given parameters
   Soldier({
     this.id,
     required this.firstName,
@@ -50,6 +71,17 @@ class Soldier {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
     );
+  }
+
+  ConscriptionStage get conscriptionStage {
+    final months = DateTime.now().difference(dateOfEnlistment).inDays ~/ 30;
+    return ConscriptionStage.fromMonths(months);
+  }
+
+  ConscriptionStage getConscriptionStage(DateTime currentDate) {
+    final months = (currentDate.difference(dateOfEnlistment).inDays / 30)
+        .floor();
+    return ConscriptionStage.fromMonths(months);
   }
 
   Map<String, dynamic> toMap() {
@@ -93,21 +125,11 @@ class Soldier {
     result.addAll({'lastName': lastName});
     result.addAll({'rank': rank.index});
     result.addAll({'dateOfEnlistment': dateOfEnlistment});
-    if (nikName != null) {
-      result.addAll({'nikName': nikName});
-    }
-    if (imageUrl != null) {
-      result.addAll({'imageUrl': imageUrl});
-    }
-    if (militaryId != null) {
-      result.addAll({'militaryId': militaryId});
-    }
-    if (phoneNumber != null) {
-      result.addAll({'phoneNumber': phoneNumber});
-    }
-    if (dateOfBirth != null) {
-      result.addAll({'dateOfBirth': dateOfBirth!});
-    }
+    result.addAll({'nikName': nikName});
+    result.addAll({'imageUrl': imageUrl});
+    result.addAll({'militaryId': militaryId});
+    result.addAll({'phoneNumber': phoneNumber});
+    result.addAll({'dateOfBirth': dateOfBirth});
 
     return result;
   }
@@ -118,9 +140,7 @@ class Soldier {
       firstName: map['firstName'] ?? '',
       lastName: map['lastName'] ?? '',
       rank: MilitaryRank.values[map['rank']],
-      dateOfEnlistment: DateTime.fromMillisecondsSinceEpoch(
-        map['dateOfEnlistment'],
-      ),
+      dateOfEnlistment: DateTime.parse(map['dateOfEnlistment']),
       nikName: map['nikName'],
       imageUrl: map['imageUrl'],
       militaryId: map['militaryId'],

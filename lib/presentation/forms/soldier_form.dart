@@ -176,24 +176,30 @@ class FormBuilderJalaliDatePicker extends StatelessWidget {
     required this.name,
     required this.label,
     this.onChanged,
+    this.initialDate,
+    this.firstDate,
+    this.lastDate,
   });
 
   final void Function(DateTime? value)? onChanged;
   final String label;
   final String name;
+  final DateTime? initialDate;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
 
   @override
   Widget build(BuildContext context) {
     return FormBuilderField<DateTime>(
       name: name,
       validator: FormBuilderValidators.required(),
-      valueTransformer: (value) => value?.millisecondsSinceEpoch,
+      valueTransformer: (value) => value?.toIso8601String(),
       builder: (field) {
         return InputDecorator(
           decoration: InputDecoration(
             labelText: label,
             contentPadding: EdgeInsets.only(top: 10.0, bottom: 0.0),
-            border: InputBorder.none,
+            // border: InputBorder.none,
             errorText: field.errorText,
           ),
           child: TextButton(
@@ -206,9 +212,13 @@ class FormBuilderJalaliDatePicker extends StatelessWidget {
               final date = await showIntlDatePicker(
                 context: context,
                 calendarMode: Calendar.jalali,
-                initialDate: DateTime.now().addYears(-1, CalendarMode.jalali),
-                firstDate: DateTime.now().addYears(-4, CalendarMode.jalali),
-                lastDate: DateTime.now(),
+                initialDate: initialDate ?? DateTime.now(),
+                firstDate:
+                    firstDate ??
+                    DateTime.now().addYears(-4, CalendarMode.jalali),
+                lastDate:
+                    lastDate ??
+                    DateTime.now().monthEndDate(CalendarMode.jalali),
               );
               field.didChange(date);
               onChanged?.call(date);

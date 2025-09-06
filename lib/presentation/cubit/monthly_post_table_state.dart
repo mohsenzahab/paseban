@@ -26,7 +26,7 @@ class MonthlyPostTableState extends BlocState {
   factory MonthlyPostTableState(
     BlocStatus status, {
     required List<Soldier> soldiers,
-    required List<GuardPost> guardPosts,
+    required List<RawGuardPost> guardPosts,
     required List<SoldierPost> posts,
     required List<PostPolicy> policies,
     required Set<DateTime> holidays,
@@ -47,16 +47,22 @@ class MonthlyPostTableState extends BlocState {
     );
   }
 
+  /// each map contains the post id as key and the SoldierPost object as value
   final Map<int, Map<DateTime, SoldierPost>> soldiersPosts;
-  // each map contains the post id as key and the GuardPost object as value
-  final Map<int, GuardPost> guardPosts;
 
+  /// each map contains the post id as key and the GuardPost object as value
+  final Map<int, RawGuardPost> guardPosts;
+
+  /// each map contains the soldier id as key and the Soldier object as value
   final Map<int, Soldier> soldiers;
 
+  /// all public policies
   final List<PostPolicy> publicPolicies;
 
+  /// each map contains the soldier id as key and the list of its policies as value
   final Map<int, List<PostPolicy>> soldierPolicies;
 
+  /// saved holidays
   final Set<DateTime> holidays;
 
   final DateTimeRange? _dateRange;
@@ -82,7 +88,7 @@ class MonthlyPostTableState extends BlocState {
   MonthlyPostTableState copyWith(
     BlocStatus status, {
     List<Soldier>? soldiers,
-    List<GuardPost>? guardPosts,
+    List<RawGuardPost>? guardPosts,
     List<PostPolicy>? policies,
     List<SoldierPost>? posts,
     List<DateTime>? holidays,
@@ -107,6 +113,22 @@ class MonthlyPostTableState extends BlocState {
     );
   }
 
+  MonthlyPostTableState copyWithPosts(
+    Map<int, Map<DateTime, SoldierPost>> posts,
+  ) {
+    return MonthlyPostTableState._(
+      status,
+      message: message,
+      soldiers: soldiers,
+      guardPosts: guardPosts,
+      soldiersPosts: posts,
+      publicPolicies: publicPolicies,
+      soldierPolicies: soldierPolicies,
+      holidays: holidays,
+      dateRange: _dateRange,
+    );
+  }
+
   @override
   BlocState setLoading() {
     return copyWith(BlocStatus.loading);
@@ -120,8 +142,8 @@ class MonthlyPostTableState extends BlocState {
     return soldiersMap;
   }
 
-  static Map<int, GuardPost> _initGuardPosts(List<GuardPost> guardPosts) {
-    final guardPostsMap = <int, GuardPost>{};
+  static Map<int, RawGuardPost> _initGuardPosts(List<RawGuardPost> guardPosts) {
+    final guardPostsMap = <int, RawGuardPost>{};
     for (var s in guardPosts) {
       guardPostsMap[s.id!] = s;
     }

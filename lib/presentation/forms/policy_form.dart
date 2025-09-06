@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:paseban/core/utils/date_helper.dart';
 import 'package:paseban/domain/models/models.dart';
 import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
 import 'package:paseban/presentation/forms/base_form.dart';
 import 'package:paseban/presentation/forms/soldier_form.dart';
 import 'package:paseban/presentation/forms/widgets/conscription_stage_field.dart';
 import 'package:paseban/presentation/posts_screen.dart';
+
+import '../../domain/enums.dart';
 
 class PolicyForm extends StatefulWidget {
   const PolicyForm({
@@ -32,7 +35,7 @@ class _PolicyFormState extends State<PolicyForm> {
   Map<ConscriptionStage, dynamic>? conscriptionStages;
   PostPolicy? editing;
   DateTime? end;
-  final formKey = GlobalKey<FormBuilderState>();
+  // final formKey = GlobalKey<FormBuilderState>();
   late bool isEdit;
   List<Widget>? stageFields;
   DateTime? start;
@@ -95,6 +98,9 @@ class _PolicyFormState extends State<PolicyForm> {
           FormBuilderJalaliDatePicker(
             name: 'start',
             label: 'تاریخ شروع مرخصی',
+            firstDate: DateTime.now().monthStartDate(CalendarMode.jalali),
+            initialDate: DateTime.now(),
+            lastDate: DateTime.now().monthEndDate(CalendarMode.jalali),
             onChanged: (value) {
               start = value;
               _initLeavePolicy();
@@ -259,14 +265,18 @@ class _PolicyFormState extends State<PolicyForm> {
 
   MonthlyPostTableCubit get cubit => context.read<MonthlyPostTableCubit>();
 
-  void _initFriendsPolicy(List<DropdownMenuItem<int>> value) {
+  void _initFriendsPolicy(List<int> value) {
     final soldiers = cubit.state.soldiers;
     editing = PostPolicy.friendSoldiers(
       soldierId: soldierId,
-      value: value.map((e) => soldiers[e.value]!.id!).toList(),
+      value: value.map((e) => soldiers[e]!.id!).toList(),
     );
   }
 
+  /*************  ✨ Windsurf Command ⭐  *************/
+  /// If [start] and [end] are not null, creates a [PostPolicy.leave] with them.
+  /// Otherwise, does nothing.
+  /*******  0ba250df-ff63-4838-934c-fec1ec7a1a6c  *******/
   void _initLeavePolicy() {
     if (start != null && end != null) {
       editing = PostPolicy.leave(
@@ -276,10 +286,10 @@ class _PolicyFormState extends State<PolicyForm> {
     }
   }
 
-  void _initWeekOffDaysPolicy(List<DropdownMenuItem<int>> value) {
+  void _initWeekOffDaysPolicy(List<int> value) {
     editing = PostPolicy.weekOffDays(
       soldierId: soldierId,
-      value: value.map((e) => Weekday.values[e.value!]).toList(),
+      value: value.map((e) => Weekday.values[e]).toList(),
     );
   }
 
@@ -294,7 +304,7 @@ class _PolicyFormState extends State<PolicyForm> {
 
   void _initMinPostCountPolicy(String? value) {
     if (value != null) {
-      editing = PostPolicy.minPostCount(
+      editing = PostPolicy.minPostCountPerMonth(
         soldierId: soldierId,
         value: int.parse(value),
       );
@@ -303,7 +313,7 @@ class _PolicyFormState extends State<PolicyForm> {
 
   void _initMaxPostCountPolicy(String? value) {
     if (value != null) {
-      editing = PostPolicy.maxPostCount(
+      editing = PostPolicy.maxPostCountPerMonth(
         soldierId: soldierId,
         value: int.parse(value),
       );
@@ -411,24 +421,24 @@ class _PolicyFormState extends State<PolicyForm> {
                 ),
               ),
               if (type != null) ...widgets,
-              if (priority != null)
-                FormBuilderDropdown(
-                  name: 'priority',
-                  decoration: const InputDecoration(labelText: ' الویت سیاست'),
-                  initialValue: priority!.index,
-                  items: Priority.values
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e.index,
-                          child: Text(e.nameFa),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    priority = Priority.values[value!];
-                    // setState(() {});
-                  },
-                ),
+              // if (priority != null)
+              FormBuilderDropdown(
+                name: 'priority',
+                decoration: const InputDecoration(labelText: ' الویت سیاست'),
+                initialValue: priority?.index,
+                items: Priority.values
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e.index,
+                        child: Text(e.nameFa),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  _priority = Priority.values[value!];
+                  // setState(() {});
+                },
+              ),
               if (conscriptionStages != null && soldierId == null)
                 Form(
                   child: InputDecorator(

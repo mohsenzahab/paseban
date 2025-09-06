@@ -17,18 +17,23 @@ class EnumIndexConverter<T extends Enum> extends TypeConverter<T, int> {
   int toSql(T value) => value.index;
 }
 
-class WeekdayListConverter extends TypeConverter<List<Weekday>, String> {
+class WeekdayListConverter extends TypeConverter<List<List<Weekday>>, String> {
   const WeekdayListConverter();
 
   @override
-  List<Weekday> fromSql(String fromDb) {
+  List<List<Weekday>> fromSql(String fromDb) {
     final List decoded = jsonDecode(fromDb);
-    return decoded.map((e) => Weekday.values[e as int]).toList();
+    return decoded.map((e) {
+      final innerList = e as List;
+      return innerList.map((e) => Weekday.values[e as int]).toList();
+    }).toList();
   }
 
   @override
-  String toSql(List<Weekday> value) {
-    return jsonEncode(value.map((e) => e.index).toList());
+  String toSql(List<List<Weekday>> value) {
+    return jsonEncode(
+      value.map((e) => e.map((e) => e.index).toList()).toList(),
+    );
   }
 }
 
@@ -45,14 +50,14 @@ class IntListConverter extends TypeConverter<List<int>, String> {
   String toSql(List<int> value) => jsonEncode(value);
 }
 
-extension PriorityColumn on IntColumnBuilder {
-  ColumnBuilder<int> intEnum<T extends Enum>() {
-    return map(EnumIndexConverter(Priority.values));
-  }
-}
+// extension PriorityColumn on IntColumnBuilder {
+//   ColumnBuilder<int> intEnum<T extends Enum>() {
+//     return map(EnumIndexConverter(Priority.values));
+//   }
+// }
 
-extension PostPolicyTypeColumn on IntColumnBuilder {
-  ColumnBuilder<int> intEnumPolicy<T extends Enum>() {
-    return map(EnumIndexConverter(PostPolicyType.values));
-  }
-}
+// extension PostPolicyTypeColumn on IntColumnBuilder {
+//   ColumnBuilder<int> intEnumPolicy<T extends Enum>() {
+//     return map(EnumIndexConverter(PostPolicyType.values));
+//   }
+// }

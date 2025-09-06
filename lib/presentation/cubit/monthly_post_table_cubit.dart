@@ -6,11 +6,14 @@ import 'package:paseban/core/bloc/bloc_messenger.dart';
 import 'package:paseban/core/bloc/state.dart';
 import 'package:paseban/core/utils/date_helper.dart';
 import 'package:paseban/data/db/app_database.dart';
+import 'package:paseban/domain/scheduler/gemeni/v1/gemini_scheduler.dart';
+import 'package:paseban/domain/scheduler/gpt/v1/scheduler_advanced.dart';
 import 'package:paseban/domain/repositories/calendar_repository.dart';
 import 'package:paseban/domain/repositories/guard_post_repository.dart';
 import 'package:paseban/domain/repositories/post_policy_repository.dart';
 import 'package:paseban/domain/repositories/soldier_post_repository.dart';
 import 'package:paseban/domain/repositories/soldier_repository.dart';
+import 'package:paseban/domain/scheduler/gpt/v2/scheduler_advanced.dart';
 
 import '../../domain/models/models.dart';
 import '../../domain/models/soldier_post.dart';
@@ -30,52 +33,12 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
     _init();
   }
 
+  final CalendarRepository calendarRepository;
   final AppDatabase db;
-  final SoldierRepository soldierRepository;
   final GuardPostRepository guardPostRepository;
   final PostPolicyRepository policyRepository;
   final SoldierPostRepository soldierPostRepository;
-  final CalendarRepository calendarRepository;
-
-  void _init() {
-    final sDate = DateTime.now().monthStartDate(CalendarMode.jalali).dateOnly;
-    final eDate = DateTime.now().monthEndDate(CalendarMode.jalali).dateOnly;
-    final futures = Future.wait([
-      soldierRepository.getAll(),
-      guardPostRepository.getAll(),
-      policyRepository.getAll(),
-      soldierPostRepository.getSoldierPostsFromRange(
-        DateTimeRange(start: sDate, end: eDate),
-      ),
-      calendarRepository.getHolidaysInRange(
-        DateTimeRange(start: sDate, end: eDate),
-      ),
-    ]);
-
-    futures
-        .then((results) {
-          final soldiers = results[0] as List<Soldier>;
-          final guardPosts = results[1] as List<GuardPost>;
-          final policies = results[2] as List<PostPolicy>;
-          final soldiersPosts = results[3] as List<SoldierPost>;
-          final holidays = results[4] as List<DateTime>;
-
-          emit(
-            state.copyWith(
-              BlocStatus.ready,
-              soldiers: soldiers,
-              guardPosts: guardPosts,
-              policies: policies,
-              posts: soldiersPosts,
-              holidays: holidays,
-              dateRange: DateTimeRange(start: sDate, end: eDate),
-            ),
-          );
-        })
-        .catchError((error) {
-          addError(error);
-        });
-  }
+  final SoldierRepository soldierRepository;
 
   void addSoldier(Map<String, dynamic> value) async {
     final s = Soldier.fromMap(value);
@@ -120,7 +83,7 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
     addSuccess('سرباز حذف شد');
   }
 
-  void addGuardPost(GuardPost post) async {
+  void addGuardPost(RawGuardPost post) async {
     final result = await guardPostRepository.insert(post);
     if (result != -1) {
       emit(
@@ -221,5 +184,95 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
       state.dateRange,
     );
     emit(state.copyWith(BlocStatus.ready, holidays: holidays));
+  }
+
+  void editGuardPost(RawGuardPost post, int id) async {
+    final result = await guardPostRepository.updatePost(post.copyWith(id: id));
+    if (result) {
+      emit(
+        state.copyWith(
+          BlocStatus.ready,
+          guardPosts: await guardPostRepository.getAll(),
+        ),
+      );
+      addSuccess('پست ویرایش شد');
+    } else {
+      addError('پست ویرایش نشد');
+    }
+  }
+
+  void _init() {
+    final sDate = DateTime.now().monthStartDate(CalendarMode.jalali).dateOnly;
+    final eDate = DateTime.now().monthEndDate(CalendarMode.jalali).dateOnly;
+    final futures = Future.wait([
+      soldierRepository.getAll(),
+      guardPostRepository.getAll(),
+      policyRepository.getAll(),
+      soldierPostRepository.getSoldierPostsFromRange(
+        DateTimeRange(start: sDate, end: eDate),
+      ),
+      calendarRepository.getHolidaysInRange(
+        DateTimeRange(start: sDate, end: eDate),
+      ),
+    ]);
+
+    futures
+        .then((results) {
+          final soldiers = results[0] as List<Soldier>;
+          final guardPosts = results[1] as List<RawGuardPost>;
+          final policies = results[2] as List<PostPolicy>;
+          final soldiersPosts = results[3] as List<SoldierPost>;
+          final holidays = results[4] as List<DateTime>;
+
+          emit(
+            state.copyWith(
+              BlocStatus.ready,
+              soldiers: soldiers,
+              guardPosts: guardPosts,
+              policies: policies,
+              posts: soldiersPosts,
+              holidays: holidays,
+              dateRange: DateTimeRange(start: sDate, end: eDate),
+            ),
+          );
+        })
+        .catchError((error) {
+          addError(error);
+        });
+  }
+
+  void runScheduler() async {
+    // final result = await GuardScheduler(
+    //   soldiers: state.soldiers,
+    //   guardPosts: state.guardPosts,
+    //   publicPolicies: state.publicPolicies,
+    //   soldierPolicies: state.soldierPolicies,
+    //   holidays: state.holidays,
+    //   dateRange: state.dateRange,
+    // ).generate();
+    // final result = SchedulerAdvanced().generate(
+    //   soldiers: state.soldiers,
+    //   guardPosts: state.guardPosts,
+    //   publicPolicies: state.publicPolicies,
+    //   soldierPolicies: state.soldierPolicies,
+    //   holidays: state.holidays,
+    //   dateRange: state.dateRange,
+    // );
+    // final result = AdvancedScheduler(
+    //   soldiers: state.soldiers,
+    //   guardPosts: state.guardPosts,
+
+    //   dateRange: state.dateRange,
+    //   constraints:
+    // );
+    final result = await GuardScheduler(
+      soldiers: state.soldiers,
+      guardPosts: state.guardPosts,
+      publicPolicies: state.publicPolicies,
+      soldierPolicies: state.soldierPolicies,
+      holidays: state.holidays,
+      dateRange: state.dateRange,
+    ).generate();
+    emit(state.copyWithPosts(result));
   }
 }

@@ -6,6 +6,7 @@ enum ClearButtonBehavior { pop, clear }
 class BaseForm extends StatefulWidget {
   const BaseForm({
     super.key,
+    this.formKey,
     required this.builder,
     required this.title,
     this.onSubmit,
@@ -21,6 +22,7 @@ class BaseForm extends StatefulWidget {
     GlobalKey<FormBuilderState> formKey,
   )
   builder;
+  final GlobalKey<FormBuilderState>? formKey;
   final String title;
   final String? addButtonLabel;
   final String? clearButtonLabel;
@@ -35,7 +37,13 @@ class BaseForm extends StatefulWidget {
 }
 
 class _BaseFormState extends State<BaseForm> {
-  final formKey = GlobalKey<FormBuilderState>();
+  late final GlobalKey<FormBuilderState> formKey;
+  @override
+  void initState() {
+    super.initState();
+    formKey = widget.formKey ?? GlobalKey<FormBuilderState>();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -98,8 +106,8 @@ class _BaseFormState extends State<BaseForm> {
   void _handleSubmit() {
     if (formKey.currentState!.saveAndValidate()) {
       final data = Map<String, dynamic>.from(formKey.currentState!.value);
-      formKey.currentState!.reset(); // clears after submit
       widget.onSubmit?.call(data);
+      formKey.currentState!.reset(); // clears after submit
     }
   }
 }

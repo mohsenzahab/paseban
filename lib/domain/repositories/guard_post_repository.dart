@@ -7,23 +7,23 @@ class GuardPostRepository {
 
   GuardPostRepository(this.db);
 
-  Future<int> insert(GuardPost post) {
+  Future<int> insert(RawGuardPost post) {
     return db.into(db.guardPostsTable).insert(post.toCompanion());
   }
 
-  Future<List<GuardPost>> getAll() async {
+  Future<List<RawGuardPost>> getAll() async {
     final rows = await db.select(db.guardPostsTable).get();
     return rows.map((e) => e.toDomain()).toList();
   }
 
-  Future<GuardPost?> getById(int id) async {
+  Future<RawGuardPost?> getById(int id) async {
     final row = await (db.select(
       db.guardPostsTable,
     )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
     return row?.toDomain();
   }
 
-  Future<bool> updatePost(GuardPost post) {
+  Future<bool> updatePost(RawGuardPost post) {
     return db.update(db.guardPostsTable).replace(post.toCompanion());
   }
 

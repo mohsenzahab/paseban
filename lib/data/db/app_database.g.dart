@@ -659,14 +659,15 @@ class $GuardPostsTableTable extends GuardPostsTable
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<List<Weekday>?, String> weekDays =
+  late final GeneratedColumnWithTypeConverter<List<List<Weekday>>?, String>
+  weekDays =
       GeneratedColumn<String>(
         'week_days',
         aliasedName,
         true,
         type: DriftSqlType.string,
         requiredDuringInsert: false,
-      ).withConverter<List<Weekday>?>(
+      ).withConverter<List<List<Weekday>>?>(
         $GuardPostsTableTable.$converterweekDaysn,
       );
   static const VerificationMeta _repeatMeta = const VerificationMeta('repeat');
@@ -711,6 +712,18 @@ class $GuardPostsTableTable extends GuardPostsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _periodStartDateMeta = const VerificationMeta(
+    'periodStartDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> periodStartDate =
+      GeneratedColumn<DateTime>(
+        'period_start_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -720,6 +733,7 @@ class $GuardPostsTableTable extends GuardPostsTable
     monthDays,
     difficulty,
     shiftsPerDay,
+    periodStartDate,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -760,6 +774,15 @@ class $GuardPostsTableTable extends GuardPostsTable
       );
     } else if (isInserting) {
       context.missing(_shiftsPerDayMeta);
+    }
+    if (data.containsKey('period_start_date')) {
+      context.handle(
+        _periodStartDateMeta,
+        periodStartDate.isAcceptableOrUnknown(
+          data['period_start_date']!,
+          _periodStartDateMeta,
+        ),
+      );
     }
     return context;
   }
@@ -804,6 +827,10 @@ class $GuardPostsTableTable extends GuardPostsTable
         DriftSqlType.int,
         data['${effectivePrefix}shifts_per_day'],
       )!,
+      periodStartDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}period_start_date'],
+      ),
     );
   }
 
@@ -812,9 +839,9 @@ class $GuardPostsTableTable extends GuardPostsTable
     return $GuardPostsTableTable(attachedDatabase, alias);
   }
 
-  static TypeConverter<List<Weekday>, String> $converterweekDays =
+  static TypeConverter<List<List<Weekday>>, String> $converterweekDays =
       const WeekdayListConverter();
-  static TypeConverter<List<Weekday>?, String?> $converterweekDaysn =
+  static TypeConverter<List<List<Weekday>>?, String?> $converterweekDaysn =
       NullAwareTypeConverter.wrap($converterweekDays);
   static TypeConverter<List<int>, String> $convertermonthDays =
       const IntListConverter();
@@ -830,11 +857,12 @@ class GuardPostsTableData extends DataClass
     implements Insertable<GuardPostsTableData> {
   final int id;
   final String title;
-  final List<Weekday>? weekDays;
+  final List<List<Weekday>>? weekDays;
   final int repeat;
   final List<int>? monthDays;
   final GuardPostDifficulty difficulty;
   final int shiftsPerDay;
+  final DateTime? periodStartDate;
   const GuardPostsTableData({
     required this.id,
     required this.title,
@@ -843,6 +871,7 @@ class GuardPostsTableData extends DataClass
     this.monthDays,
     required this.difficulty,
     required this.shiftsPerDay,
+    this.periodStartDate,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -866,6 +895,9 @@ class GuardPostsTableData extends DataClass
       );
     }
     map['shifts_per_day'] = Variable<int>(shiftsPerDay);
+    if (!nullToAbsent || periodStartDate != null) {
+      map['period_start_date'] = Variable<DateTime>(periodStartDate);
+    }
     return map;
   }
 
@@ -882,6 +914,9 @@ class GuardPostsTableData extends DataClass
           : Value(monthDays),
       difficulty: Value(difficulty),
       shiftsPerDay: Value(shiftsPerDay),
+      periodStartDate: periodStartDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(periodStartDate),
     );
   }
 
@@ -893,13 +928,14 @@ class GuardPostsTableData extends DataClass
     return GuardPostsTableData(
       id: serializer.fromJson<int>(json['id']),
       title: serializer.fromJson<String>(json['title']),
-      weekDays: serializer.fromJson<List<Weekday>?>(json['weekDays']),
+      weekDays: serializer.fromJson<List<List<Weekday>>?>(json['weekDays']),
       repeat: serializer.fromJson<int>(json['repeat']),
       monthDays: serializer.fromJson<List<int>?>(json['monthDays']),
       difficulty: $GuardPostsTableTable.$converterdifficulty.fromJson(
         serializer.fromJson<int>(json['difficulty']),
       ),
       shiftsPerDay: serializer.fromJson<int>(json['shiftsPerDay']),
+      periodStartDate: serializer.fromJson<DateTime?>(json['periodStartDate']),
     );
   }
   @override
@@ -908,24 +944,26 @@ class GuardPostsTableData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'title': serializer.toJson<String>(title),
-      'weekDays': serializer.toJson<List<Weekday>?>(weekDays),
+      'weekDays': serializer.toJson<List<List<Weekday>>?>(weekDays),
       'repeat': serializer.toJson<int>(repeat),
       'monthDays': serializer.toJson<List<int>?>(monthDays),
       'difficulty': serializer.toJson<int>(
         $GuardPostsTableTable.$converterdifficulty.toJson(difficulty),
       ),
       'shiftsPerDay': serializer.toJson<int>(shiftsPerDay),
+      'periodStartDate': serializer.toJson<DateTime?>(periodStartDate),
     };
   }
 
   GuardPostsTableData copyWith({
     int? id,
     String? title,
-    Value<List<Weekday>?> weekDays = const Value.absent(),
+    Value<List<List<Weekday>>?> weekDays = const Value.absent(),
     int? repeat,
     Value<List<int>?> monthDays = const Value.absent(),
     GuardPostDifficulty? difficulty,
     int? shiftsPerDay,
+    Value<DateTime?> periodStartDate = const Value.absent(),
   }) => GuardPostsTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -934,6 +972,9 @@ class GuardPostsTableData extends DataClass
     monthDays: monthDays.present ? monthDays.value : this.monthDays,
     difficulty: difficulty ?? this.difficulty,
     shiftsPerDay: shiftsPerDay ?? this.shiftsPerDay,
+    periodStartDate: periodStartDate.present
+        ? periodStartDate.value
+        : this.periodStartDate,
   );
   GuardPostsTableData copyWithCompanion(GuardPostsTableCompanion data) {
     return GuardPostsTableData(
@@ -948,6 +989,9 @@ class GuardPostsTableData extends DataClass
       shiftsPerDay: data.shiftsPerDay.present
           ? data.shiftsPerDay.value
           : this.shiftsPerDay,
+      periodStartDate: data.periodStartDate.present
+          ? data.periodStartDate.value
+          : this.periodStartDate,
     );
   }
 
@@ -960,7 +1004,8 @@ class GuardPostsTableData extends DataClass
           ..write('repeat: $repeat, ')
           ..write('monthDays: $monthDays, ')
           ..write('difficulty: $difficulty, ')
-          ..write('shiftsPerDay: $shiftsPerDay')
+          ..write('shiftsPerDay: $shiftsPerDay, ')
+          ..write('periodStartDate: $periodStartDate')
           ..write(')'))
         .toString();
   }
@@ -974,6 +1019,7 @@ class GuardPostsTableData extends DataClass
     monthDays,
     difficulty,
     shiftsPerDay,
+    periodStartDate,
   );
   @override
   bool operator ==(Object other) =>
@@ -985,17 +1031,19 @@ class GuardPostsTableData extends DataClass
           other.repeat == this.repeat &&
           other.monthDays == this.monthDays &&
           other.difficulty == this.difficulty &&
-          other.shiftsPerDay == this.shiftsPerDay);
+          other.shiftsPerDay == this.shiftsPerDay &&
+          other.periodStartDate == this.periodStartDate);
 }
 
 class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
   final Value<int> id;
   final Value<String> title;
-  final Value<List<Weekday>?> weekDays;
+  final Value<List<List<Weekday>>?> weekDays;
   final Value<int> repeat;
   final Value<List<int>?> monthDays;
   final Value<GuardPostDifficulty> difficulty;
   final Value<int> shiftsPerDay;
+  final Value<DateTime?> periodStartDate;
   const GuardPostsTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1004,6 +1052,7 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
     this.monthDays = const Value.absent(),
     this.difficulty = const Value.absent(),
     this.shiftsPerDay = const Value.absent(),
+    this.periodStartDate = const Value.absent(),
   });
   GuardPostsTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1013,6 +1062,7 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
     this.monthDays = const Value.absent(),
     required GuardPostDifficulty difficulty,
     required int shiftsPerDay,
+    this.periodStartDate = const Value.absent(),
   }) : title = Value(title),
        difficulty = Value(difficulty),
        shiftsPerDay = Value(shiftsPerDay);
@@ -1024,6 +1074,7 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
     Expression<String>? monthDays,
     Expression<int>? difficulty,
     Expression<int>? shiftsPerDay,
+    Expression<DateTime>? periodStartDate,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1033,17 +1084,19 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
       if (monthDays != null) 'month_days': monthDays,
       if (difficulty != null) 'difficulty': difficulty,
       if (shiftsPerDay != null) 'shifts_per_day': shiftsPerDay,
+      if (periodStartDate != null) 'period_start_date': periodStartDate,
     });
   }
 
   GuardPostsTableCompanion copyWith({
     Value<int>? id,
     Value<String>? title,
-    Value<List<Weekday>?>? weekDays,
+    Value<List<List<Weekday>>?>? weekDays,
     Value<int>? repeat,
     Value<List<int>?>? monthDays,
     Value<GuardPostDifficulty>? difficulty,
     Value<int>? shiftsPerDay,
+    Value<DateTime?>? periodStartDate,
   }) {
     return GuardPostsTableCompanion(
       id: id ?? this.id,
@@ -1053,6 +1106,7 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
       monthDays: monthDays ?? this.monthDays,
       difficulty: difficulty ?? this.difficulty,
       shiftsPerDay: shiftsPerDay ?? this.shiftsPerDay,
+      periodStartDate: periodStartDate ?? this.periodStartDate,
     );
   }
 
@@ -1086,6 +1140,9 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
     if (shiftsPerDay.present) {
       map['shifts_per_day'] = Variable<int>(shiftsPerDay.value);
     }
+    if (periodStartDate.present) {
+      map['period_start_date'] = Variable<DateTime>(periodStartDate.value);
+    }
     return map;
   }
 
@@ -1098,7 +1155,8 @@ class GuardPostsTableCompanion extends UpdateCompanion<GuardPostsTableData> {
           ..write('repeat: $repeat, ')
           ..write('monthDays: $monthDays, ')
           ..write('difficulty: $difficulty, ')
-          ..write('shiftsPerDay: $shiftsPerDay')
+          ..write('shiftsPerDay: $shiftsPerDay, ')
+          ..write('periodStartDate: $periodStartDate')
           ..write(')'))
         .toString();
   }
@@ -2574,21 +2632,23 @@ typedef $$GuardPostsTableTableCreateCompanionBuilder =
     GuardPostsTableCompanion Function({
       Value<int> id,
       required String title,
-      Value<List<Weekday>?> weekDays,
+      Value<List<List<Weekday>>?> weekDays,
       Value<int> repeat,
       Value<List<int>?> monthDays,
       required GuardPostDifficulty difficulty,
       required int shiftsPerDay,
+      Value<DateTime?> periodStartDate,
     });
 typedef $$GuardPostsTableTableUpdateCompanionBuilder =
     GuardPostsTableCompanion Function({
       Value<int> id,
       Value<String> title,
-      Value<List<Weekday>?> weekDays,
+      Value<List<List<Weekday>>?> weekDays,
       Value<int> repeat,
       Value<List<int>?> monthDays,
       Value<GuardPostDifficulty> difficulty,
       Value<int> shiftsPerDay,
+      Value<DateTime?> periodStartDate,
     });
 
 final class $$GuardPostsTableTableReferences
@@ -2651,7 +2711,11 @@ class $$GuardPostsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<List<Weekday>?, List<Weekday>, String>
+  ColumnWithTypeConverterFilters<
+    List<List<Weekday>>?,
+    List<List<Weekday>>,
+    String
+  >
   get weekDays => $composableBuilder(
     column: $table.weekDays,
     builder: (column) => ColumnWithTypeConverterFilters(column),
@@ -2676,6 +2740,11 @@ class $$GuardPostsTableTableFilterComposer
 
   ColumnFilters<int> get shiftsPerDay => $composableBuilder(
     column: $table.shiftsPerDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get periodStartDate => $composableBuilder(
+    column: $table.periodStartDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2748,6 +2817,11 @@ class $$GuardPostsTableTableOrderingComposer
     column: $table.shiftsPerDay,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get periodStartDate => $composableBuilder(
+    column: $table.periodStartDate,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GuardPostsTableTableAnnotationComposer
@@ -2765,7 +2839,7 @@ class $$GuardPostsTableTableAnnotationComposer
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<List<Weekday>?, String> get weekDays =>
+  GeneratedColumnWithTypeConverter<List<List<Weekday>>?, String> get weekDays =>
       $composableBuilder(column: $table.weekDays, builder: (column) => column);
 
   GeneratedColumn<int> get repeat =>
@@ -2782,6 +2856,11 @@ class $$GuardPostsTableTableAnnotationComposer
 
   GeneratedColumn<int> get shiftsPerDay => $composableBuilder(
     column: $table.shiftsPerDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get periodStartDate => $composableBuilder(
+    column: $table.periodStartDate,
     builder: (column) => column,
   );
 
@@ -2844,11 +2923,12 @@ class $$GuardPostsTableTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> title = const Value.absent(),
-                Value<List<Weekday>?> weekDays = const Value.absent(),
+                Value<List<List<Weekday>>?> weekDays = const Value.absent(),
                 Value<int> repeat = const Value.absent(),
                 Value<List<int>?> monthDays = const Value.absent(),
                 Value<GuardPostDifficulty> difficulty = const Value.absent(),
                 Value<int> shiftsPerDay = const Value.absent(),
+                Value<DateTime?> periodStartDate = const Value.absent(),
               }) => GuardPostsTableCompanion(
                 id: id,
                 title: title,
@@ -2857,16 +2937,18 @@ class $$GuardPostsTableTableTableManager
                 monthDays: monthDays,
                 difficulty: difficulty,
                 shiftsPerDay: shiftsPerDay,
+                periodStartDate: periodStartDate,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String title,
-                Value<List<Weekday>?> weekDays = const Value.absent(),
+                Value<List<List<Weekday>>?> weekDays = const Value.absent(),
                 Value<int> repeat = const Value.absent(),
                 Value<List<int>?> monthDays = const Value.absent(),
                 required GuardPostDifficulty difficulty,
                 required int shiftsPerDay,
+                Value<DateTime?> periodStartDate = const Value.absent(),
               }) => GuardPostsTableCompanion.insert(
                 id: id,
                 title: title,
@@ -2875,6 +2957,7 @@ class $$GuardPostsTableTableTableManager
                 monthDays: monthDays,
                 difficulty: difficulty,
                 shiftsPerDay: shiftsPerDay,
+                periodStartDate: periodStartDate,
               ),
           withReferenceMapper: (p0) => p0
               .map(

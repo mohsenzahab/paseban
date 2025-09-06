@@ -157,12 +157,30 @@ extension MilitaryRankExtension on MilitaryRank {
   }
 }
 
+/// Conscription Stage of a Soldier
+/// It splits service period of the soldiers into 5 stages
+/// recruit, junior, intermediate, senior, discharging
+/// Its measured by the months that a soldier has been on service.
 enum ConscriptionStage {
   recruit, // تازه وارد (دوره آموزشی یا ماه‌های اول)
   junior, // سرباز تازه وارد به یگان (تجربه کم)
   intermediate, // سرباز میان‌خدمتی (چند ماه خدمت کرده)
   senior, // سرباز قدیمی (نزدیک به پایان خدمت)
-  discharged, // ترخیص شده
+  discharging; // درحال ترخیص شدن
+
+  static ConscriptionStage fromMonths(int months) {
+    if (months < 3) {
+      return ConscriptionStage.recruit;
+    } else if (months < 6) {
+      return ConscriptionStage.junior;
+    } else if (months < 12) {
+      return ConscriptionStage.intermediate;
+    } else if (months < 18) {
+      return ConscriptionStage.senior;
+    } else {
+      return ConscriptionStage.discharging;
+    }
+  }
 }
 
 extension ConscriptionStageExtension on ConscriptionStage {
@@ -176,8 +194,8 @@ extension ConscriptionStageExtension on ConscriptionStage {
         return "میان‌خدمتی";
       case ConscriptionStage.senior:
         return "پایان‌خدمتی";
-      case ConscriptionStage.discharged:
-        return "ترخیص شده";
+      case ConscriptionStage.discharging:
+        return "درحال ترخیص";
     }
   }
 
@@ -191,8 +209,8 @@ extension ConscriptionStageExtension on ConscriptionStage {
         return "Intermediate Soldier";
       case ConscriptionStage.senior:
         return "Senior Soldier";
-      case ConscriptionStage.discharged:
-        return "Discharged";
+      case ConscriptionStage.discharging:
+        return "Discharging";
     }
   }
 }

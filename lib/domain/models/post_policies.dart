@@ -3,6 +3,26 @@ import 'package:flutter/material.dart';
 import '../enums.dart';
 import 'weekday.dart';
 
+/// Policies that are used to calculate and schedule soldiers posts.
+///
+/// These policies are used to configure the generation of posts for soldiers.
+/// Policies can be used to specify the priority of a post, the number of posts
+/// a soldier can have, the days of the week they can have posts, the number of
+/// weeks a soldier can have a post, and more.
+/// Each policy has a priority that determines its importance.
+/// If its priority is high then algorithm should try hard to schedule it first and
+/// make it valid. But if its priority is low ,then the algorithm isn't have to
+/// try that hard. It depends on priority of this policy and the other policies.
+/// Algorithm always have to try to schedule the post with the highest priority.
+/// Although if it is possible to fit in all policies, then algorithm should do it.
+///
+/// Important note: Some of policies also have  `Map<ConscriptionStage,T>? stagePriority`
+/// By specifying this parameter, we can make personalize values for each stage of
+/// a soldier which means algorithm should be more specific at scheduling the
+/// posts.
+/// This values later will be used for all soldiers.
+///
+/// The [StagedPostPolicy.stagePriority] priority is always lower than [ValuePostPolicy.priority].
 sealed class PostPolicy {
   final int? id;
   final int? soldierId;
@@ -10,14 +30,23 @@ sealed class PostPolicy {
 
   PostPolicy copyWith({int? id, int? soldierId, Priority? priority});
 
-  Map<String, dynamic> toFormValues() => {
-    'priority': priority.index,
-    'soldierId': soldierId,
-    if (this is ValuePostPolicy)
-      'value': (this as ValuePostPolicy).value.toString(),
-    if (this is StagedPostPolicy)
-      'stagePriority': (this as StagedPostPolicy).stagePriority,
-  };
+  Map<String, dynamic> toFormValues() {
+    final value = switch (this) {
+      FriendSoldiers f => f.value,
+
+      ValuePostPolicy v => v.value.toString(),
+
+      _ => null,
+    };
+    return {
+      'priority': priority.index,
+      'soldierId': soldierId,
+
+      if (value != null) 'value': value,
+      if (this is StagedPostPolicy)
+        'stagePriority': (this as StagedPostPolicy).stagePriority,
+    };
+  }
 
   PostPolicyType get type => switch (this) {
     Leave() => PostPolicyType.leave,
@@ -26,8 +55,8 @@ sealed class PostPolicy {
     NoNight1Night() => PostPolicyType.noNight1Night,
     NoNight2Night() => PostPolicyType.noNight2Night,
     NoNightNNight() => PostPolicyType.noNightNNight,
-    MinPostCount() => PostPolicyType.minPostCount,
-    MaxPostCount() => PostPolicyType.maxPostCount,
+    MinPostCountPerMonth() => PostPolicyType.minPostCount,
+    MaxPostCountPerMonth() => PostPolicyType.maxPostCount,
     NoWeekendPerMonth() => PostPolicyType.noWeekendPerMonth,
     EqualHolidayPost() => PostPolicyType.equalHolidayPost,
     EqualPostDifficulty() => PostPolicyType.equalPostDifficulty,
@@ -39,6 +68,9 @@ sealed class PostPolicy {
     this.priority = Priority.unimportant,
   });
 
+  /// Creates a new leave policy.
+  /// A leave policy specifies the date range that a soldier is on leave and
+  /// cant be assigned to a post.
   factory PostPolicy.leave({
     int? id,
     required int? soldierId,
@@ -53,6 +85,10 @@ sealed class PostPolicy {
     );
   }
 
+  /// Creates a new friend soldiers policy.
+  /// A friend soldiers policy specifies the list of its friends.
+  /// this means that algorithm should try to assign posts to this soldier and
+  /// its friends in a same date.
   factory PostPolicy.friendSoldiers({
     int? id,
     required int? soldierId,
@@ -67,6 +103,9 @@ sealed class PostPolicy {
     );
   }
 
+  /// Creates a new week off days policy.
+  /// A week off days policy specifies the list of days that a soldier dont want
+  /// or cannot have a post.
   factory PostPolicy.weekOffDays({
     int? id,
     required int? soldierId,
@@ -81,12 +120,21 @@ sealed class PostPolicy {
     );
   }
 
+  /// Creates a new no night n night policy.
+  /// A no night n night policy specifies the number of nights that a soldier
+  /// should not have a post. It may be translated to the distance between
+  /// soldier's posts. If the value is 1, then the soldier should not have a
+  /// post on the next day. If its 2, then the soldier should not have a post on
+  /// the next 2 days.
+  /// Like all the other policies, scheduling and implementing this policy depends
+  /// on the priority of this policy compare to the other ones.
   factory PostPolicy.noNightNNight({
     int? id,
     required int? soldierId,
     required int value,
     Priority priority = Priority.medium,
   }) {
+    assert(value > 0);
     return NoNightNNight(
       id: id,
       soldierId: soldierId,
@@ -95,6 +143,7 @@ sealed class PostPolicy {
     );
   }
 
+  /// Its a special case of [noNightNNight] where the value is 1
   factory PostPolicy.noNight1Night({
     int? id,
     required int? soldierId,
@@ -102,6 +151,8 @@ sealed class PostPolicy {
   }) {
     return NoNight1Night(id: id, soldierId: soldierId, priority: priority);
   }
+
+  /// Its a special case of [noNightNNight] where the value is 2
   factory PostPolicy.noNight2Night({
     int? id,
     required int? soldierId,
@@ -110,14 +161,17 @@ sealed class PostPolicy {
     return NoNight2Night(id: id, soldierId: soldierId, priority: priority);
   }
 
-  factory PostPolicy.minPostCount({
+  /// Creates a new min post count policy.
+  /// A min post count policy specifies the minimum number of posts that a soldier
+  /// should have in a month.
+  factory PostPolicy.minPostCountPerMonth({
     int? id,
     required int? soldierId,
     required int value,
     Priority priority = Priority.medium,
     Map<ConscriptionStage, int>? stagePriority,
   }) {
-    return MinPostCount(
+    return MinPostCountPerMonth(
       id: id,
       soldierId: soldierId,
       value: value,
@@ -126,14 +180,17 @@ sealed class PostPolicy {
     );
   }
 
-  factory PostPolicy.maxPostCount({
+  /// Creates a new max post count policy.
+  /// A max post count policy specifies the maximum number of posts that a soldier
+  /// should have in a month.
+  factory PostPolicy.maxPostCountPerMonth({
     int? id,
     required int? soldierId,
     required int value,
     Priority priority = Priority.high,
     Map<ConscriptionStage, int>? stagePriority,
   }) {
-    return MaxPostCount(
+    return MaxPostCountPerMonth(
       id: id,
       soldierId: soldierId,
       value: value,
@@ -142,6 +199,13 @@ sealed class PostPolicy {
     );
   }
 
+  /// Creates a new no weekend per month policy.
+  /// A no weekend per month policy specifies the number of weekends that a soldier
+  /// should not have a post in a month.
+  /// Its more controller using its [stagePriority] values. So higher stage soldiers
+  /// can have less weekend posts while lower stage soldiers then must have more
+  /// weekends posts.
+  /// By default its equal for every one
   factory PostPolicy.noWeekendPerMonth({
     int? id,
     required int? soldierId,
@@ -158,6 +222,11 @@ sealed class PostPolicy {
     );
   }
 
+  /// Creates a new equal holiday post policy.
+  /// An equal holiday post policy states that soldiers must have equal number of holiday posts
+  /// in a month. But it can be more controller using its [stagePriority] values. So higher stage soldiers can have less holiday posts and lower stage ones
+  /// then should have more holiday posts.
+  /// By default its equal for every one
   factory PostPolicy.equalHolidayPost({
     int? id,
     Priority priority = Priority.medium,
@@ -169,6 +238,12 @@ sealed class PostPolicy {
       stagePriority: stagePriority,
     );
   }
+
+  /// Creates a new equal post difficulty policy.
+  /// An equal post difficulty policy states that soldiers must have equal difficulty of posts.
+  /// in a month. But it can be more controller using its [stagePriority] values. So higher stage soldiers can have easier posts and lower stage ones
+  /// then should have harder posts.
+  /// By default its equal for every one
 
   factory PostPolicy.equalPostDifficulty({
     int? id,
@@ -187,14 +262,12 @@ sealed class PostPolicy {
     FriendSoldiers() => 'دوستان',
     WeekOffDays() => 'روز هفته',
     NoNightNNight() => 'بدون شب',
-    MinPostCount() => 'حداقل پست',
-    MaxPostCount() => 'حداکثر پست',
+    MinPostCountPerMonth() => 'حداقل پست',
+    MaxPostCountPerMonth() => 'حداکثر پست',
     NoWeekendPerMonth() => 'بدون هفته',
     EqualHolidayPost() => 'پست هفتگی',
     EqualPostDifficulty() => 'سختی پست',
   };
-
-  // static List<PostPolicyType> get values => [Leave, FriendSoldiers, WeekOffDays, NoNightNNight, MinPostCount, MaxPostCount, NoWeekendPerMonth, EqualHolidayPost, EqualPostDifficulty];
 }
 
 sealed class ValuePostPolicy<T> extends PostPolicy {
@@ -344,8 +417,8 @@ sealed class PublicStagedPolicy<T> extends ValuePostPolicy<T>
   });
 }
 
-class MinPostCount extends PublicStagedPolicy<int> {
-  MinPostCount({
+class MinPostCountPerMonth extends PublicStagedPolicy<int> {
+  MinPostCountPerMonth({
     super.id,
     super.soldierId,
     required super.value,
@@ -354,13 +427,13 @@ class MinPostCount extends PublicStagedPolicy<int> {
   });
 
   @override
-  MinPostCount copyWith({
+  MinPostCountPerMonth copyWith({
     int? id,
     int? soldierId,
     Priority? priority,
     Map<ConscriptionStage, int>? stagePriority,
   }) {
-    return MinPostCount(
+    return MinPostCountPerMonth(
       id: id ?? this.id,
       soldierId: soldierId ?? this.soldierId,
       value: value,
@@ -370,8 +443,8 @@ class MinPostCount extends PublicStagedPolicy<int> {
   }
 }
 
-class MaxPostCount extends PublicStagedPolicy<int> {
-  MaxPostCount({
+class MaxPostCountPerMonth extends PublicStagedPolicy<int> {
+  MaxPostCountPerMonth({
     super.id,
     super.soldierId,
     required super.value,
@@ -380,13 +453,13 @@ class MaxPostCount extends PublicStagedPolicy<int> {
   });
 
   @override
-  MaxPostCount copyWith({
+  MaxPostCountPerMonth copyWith({
     int? id,
     int? soldierId,
     Priority? priority,
     Map<ConscriptionStage, int>? stagePriority,
   }) {
-    return MaxPostCount(
+    return MaxPostCountPerMonth(
       id: id ?? this.id,
       soldierId: soldierId ?? this.soldierId,
       value: value,

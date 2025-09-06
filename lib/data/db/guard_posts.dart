@@ -14,4 +14,6 @@ class GuardPostsTable extends Table {
   TextColumn get monthDays => text().map(const IntListConverter()).nullable()();
   IntColumn get difficulty => intEnum<GuardPostDifficulty>()();
   IntColumn get shiftsPerDay => integer()();
+
+  DateTimeColumn get periodStartDate => dateTime().nullable()();
 }

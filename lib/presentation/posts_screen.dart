@@ -5,6 +5,11 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:paseban/domain/models/models.dart';
 import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
+import 'package:paseban/presentation/forms/soldier_form.dart';
+import 'package:paseban/presentation/forms/widgets/weekday_selector.dart';
+
+import '../domain/enums.dart';
+import 'forms/base_form.dart';
 
 const monthDays = [
   1,
@@ -48,7 +53,8 @@ class PostsScreen extends StatefulWidget {
 
 class _PostsScreenState extends State<PostsScreen> {
   final formKey = GlobalKey<FormBuilderState>();
-  GuardPost? editingPost;
+  RawGuardPost? editingPost;
+  int repeat = 1;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,9 +84,8 @@ class _PostsScreenState extends State<PostsScreen> {
                                 onPressed: () {
                                   setState(() {
                                     editingPost = posts[index];
-                                    formKey.currentState!.patchValue(
-                                      editingPost!.toFormValues(),
-                                    );
+                                    final values = editingPost!.toFormValues();
+                                    formKey.currentState!.patchValue(values);
                                   });
                                 },
                               ),
@@ -102,243 +107,179 @@ class _PostsScreenState extends State<PostsScreen> {
               ),
             ),
             Expanded(
-              flex: 1,
-              child: FormBuilder(
-                key: formKey,
+              flex: 2,
+              child: BaseForm(
+                formKey: formKey,
+                title: "افزودن پست",
                 initialValue: editingPost?.toFormValues() ?? {},
-                child: Column(
-                  spacing: 12.0,
-                  children: [
-                    const Text("افزودن پست"),
-                    FormBuilderTextField(
-                      name: "title",
-                      decoration: const InputDecoration(labelText: "عنوان"),
-                      validator: FormBuilderValidators.required(),
-                    ),
-                    FormBuilderTextField(
-                      name: "shiftsPerDay",
-                      decoration: const InputDecoration(
-                        labelText: 'تعداد پاس ها',
+                onSubmit: (value) {
+                  final post = RawGuardPost.fromMap(value);
+                  if (editingPost == null) {
+                    context.read<MonthlyPostTableCubit>().addGuardPost(post);
+                  } else {
+                    context.read<MonthlyPostTableCubit>().editGuardPost(
+                      post,
+                      editingPost!.id!,
+                    );
+                  }
+                },
+                onClear: () {
+                  setState(() {
+                    editingPost = null;
+                  });
+                },
+
+                clearButtonBehavior: ClearButtonBehavior.clear,
+                builder: (BuildContext context, GlobalKey<FormBuilderState> formKey) {
+                  return Column(
+                    spacing: 12.0,
+                    children: [
+                      FormBuilderTextField(
+                        name: "title",
+                        decoration: const InputDecoration(labelText: "عنوان"),
+                        validator: FormBuilderValidators.required(),
                       ),
-                      validator: FormBuilderValidators.required(),
-                      keyboardType: TextInputType.number,
-                      valueTransformer: (value) => int.parse(value!),
-                    ),
-                    FormBuilderTextField(
-                      name: "repeat",
-                      decoration: const InputDecoration(labelText: 'تکرار'),
-                      initialValue: 1.toString(),
-                      keyboardType: TextInputType.number,
-                      valueTransformer: (value) => int.parse(value!),
-                    ),
+                      FormBuilderTextField(
+                        name: "shiftsPerDay",
+                        decoration: const InputDecoration(
+                          labelText: 'تعداد پاس ها',
+                        ),
+                        validator: FormBuilderValidators.required(),
+                        keyboardType: TextInputType.number,
+                        valueTransformer: (value) => int.parse(value!),
+                      ),
 
-                    FormBuilderDropdown(
-                      name: 'difficulty',
-                      initialValue: GuardPostDifficulty.medium.index,
-                      items: GuardPostDifficulty.values
-                          .map(
-                            (e) => DropdownMenuItem(
-                              value: e.index,
-                              child: Text(e.name),
-                            ),
-                          )
-                          .toList(),
-                      decoration: const InputDecoration(labelText: 'سختی'),
-                    ),
+                      FormBuilderDropdown(
+                        name: 'difficulty',
+                        initialValue: GuardPostDifficulty.medium.index,
+                        items: GuardPostDifficulty.values
+                            .map(
+                              (e) => DropdownMenuItem(
+                                value: e.index,
+                                child: Text(e.name),
+                              ),
+                            )
+                            .toList(),
+                        decoration: const InputDecoration(labelText: 'سختی'),
+                      ),
 
-                    FormBuilderField<List<Weekday>>(
-                      valueTransformer: (value) =>
-                          value?.map((e) => e.index).toList(),
-                      builder: (field) {
-                        final selectedItems = field.value ?? [];
+                      FormBuilderTextField(
+                        name: "repeat",
+                        decoration: const InputDecoration(labelText: 'تکرار'),
+                        initialValue: repeat.toString(),
+                        keyboardType: TextInputType.number,
+                        validator: FormBuilderValidators.integer(),
+                        onChanged: (value) {
+                          repeat = int.tryParse(value!) ?? 1;
+                          setState(() {});
+                        },
+                        valueTransformer: (value) => int.parse(value!),
+                      ),
+                      if (repeat > 1)
+                        FormBuilderJalaliDatePicker(
+                          name: 'periodStartDate',
+                          label: 'تاریخ شروع',
+                        ),
 
-                        return DropdownButton2(
-                          isExpanded: true,
-                          items: Weekday.values
-                              .map(
-                                (item) => DropdownMenuItem(
-                                  value: item,
-                                  //disable default onTap to avoid closing menu when selecting an item
-                                  enabled: false,
-                                  child: StatefulBuilder(
-                                    builder: (context, menuSetState) {
-                                      final isSelected = selectedItems.contains(
-                                        item,
-                                      );
-                                      return InkWell(
-                                        onTap: () {
-                                          isSelected
-                                              ? selectedItems.remove(item)
-                                              : selectedItems.add(item);
-                                          //This rebuilds the StatefulWidget to update the button's text
-                                          field.didChange(selectedItems);
-                                          //This rebuilds the dropdownMenu Widget to update the check mark
-                                          menuSetState(() {});
-                                        },
-                                        child: Container(
-                                          height: double.infinity,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              if (isSelected)
-                                                const Icon(
-                                                  Icons.check_box_outlined,
-                                                )
-                                              else
-                                                const Icon(
-                                                  Icons.check_box_outline_blank,
-                                                ),
-                                              const SizedBox(width: 16),
-                                              Expanded(
-                                                child: Text(
-                                                  item.name,
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          value: selectedItems.isEmpty
-                              ? null
-                              : selectedItems.last,
-                          onChanged: (value) {
-                            field.didChange(selectedItems.toList());
-                          },
-                          selectedItemBuilder: (context) {
-                            return Weekday.values.map((item) {
-                              return Container(
-                                alignment: AlignmentDirectional.center,
-                                child: Text(
-                                  field.value?.map((e) => e.name).join(', ') ??
-                                      '',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  maxLines: 1,
-                                ),
-                              );
-                            }).toList();
-                          },
-                          buttonStyleData: const ButtonStyleData(
-                            padding: EdgeInsets.only(left: 16, right: 8),
-                            height: 40,
-                            // width: 140,
-                          ),
-                          menuItemStyleData: const MenuItemStyleData(
-                            height: 40,
-                            padding: EdgeInsets.zero,
-                          ),
-                        );
-                      },
-                      name: 'weekdays',
-                    ),
-                    FormBuilderField<List<int>>(
-                      builder: (field) {
-                        final selectedItems = field.value ?? [];
-                        return DropdownButton2(
-                          isExpanded: true,
-                          items: monthDays
-                              .map(
-                                (e) => DropdownMenuItem(
-                                  value: e,
-                                  child: StatefulBuilder(
-                                    builder: (context, menuSetState) {
-                                      final isSelected = selectedItems.contains(
-                                        e,
-                                      );
-                                      return InkWell(
-                                        onTap: () {
-                                          isSelected
-                                              ? selectedItems.remove(e)
-                                              : selectedItems.add(e);
-                                          //This rebuilds the StatefulWidget to update the button's text
-                                          field.didChange(selectedItems);
-                                          //This rebuilds the dropdownMenu Widget to update the check mark
-                                          menuSetState(() {});
-                                        },
-                                        child: Container(
-                                          height: double.infinity,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              if (isSelected)
-                                                const Icon(
-                                                  Icons.check_box_outlined,
-                                                )
-                                              else
-                                                const Icon(
-                                                  Icons.check_box_outline_blank,
-                                                ),
-                                              const SizedBox(width: 16),
-                                              Expanded(
-                                                child: Text(
-                                                  e.toString(),
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          value: selectedItems.isEmpty
-                              ? null
-                              : selectedItems.last,
-                          onChanged: (value) {},
-                          selectedItemBuilder: (context) {
-                            return monthDays.map((item) {
-                              return Container(
-                                alignment: AlignmentDirectional.center,
-                                child: Text(
-                                  field.value?.join(', ') ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  maxLines: 1,
-                                ),
-                              );
-                            }).toList();
-                          },
-                        );
-                      },
-                      name: 'monthDays',
-                    ),
-
-                    ElevatedButton(
-                      child: const Text("افزودن"),
-                      onPressed: () {
-                        if (formKey.currentState!.saveAndValidate()) {
-                          final values = formKey.currentState!.value;
-                          final post = GuardPost.fromMap(values);
-                          context.read<MonthlyPostTableCubit>().addGuardPost(
-                            post,
+                      FormBuilderField<List<List<Weekday>>>(
+                        valueTransformer: (value) => value
+                            ?.map((e) => e.map((e) => e.index).toList())
+                            .toList(),
+                        builder: (field) {
+                          return WeekdaySelector(
+                            weeksCount: repeat,
+                            selected: field.value,
+                            onSelectionChanged: (selectedDays) {
+                              field.didChange(selectedDays);
+                            },
                           );
-                          formKey.currentState!.reset();
-                        }
-                      },
-                    ),
-                  ],
-                ),
+                        },
+                        name: 'weekdays',
+                      ),
+
+                      FormBuilderField<List<int>>(
+                        builder: (field) {
+                          final selectedItems = field.value ?? [];
+                          return DropdownButton2(
+                            isExpanded: true,
+                            items: monthDays
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: StatefulBuilder(
+                                      builder: (context, menuSetState) {
+                                        final isSelected = selectedItems
+                                            .contains(e);
+                                        return InkWell(
+                                          onTap: () {
+                                            isSelected
+                                                ? selectedItems.remove(e)
+                                                : selectedItems.add(e);
+                                            //This rebuilds the StatefulWidget to update the button's text
+                                            field.didChange(selectedItems);
+                                            //This rebuilds the dropdownMenu Widget to update the check mark
+                                            menuSetState(() {});
+                                          },
+                                          child: Container(
+                                            height: double.infinity,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                if (isSelected)
+                                                  const Icon(
+                                                    Icons.check_box_outlined,
+                                                  )
+                                                else
+                                                  const Icon(
+                                                    Icons
+                                                        .check_box_outline_blank,
+                                                  ),
+                                                const SizedBox(width: 16),
+                                                Expanded(
+                                                  child: Text(
+                                                    e.toString(),
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            value: selectedItems.isEmpty
+                                ? null
+                                : selectedItems.last,
+                            onChanged: (value) {},
+                            selectedItemBuilder: (context) {
+                              return monthDays.map((item) {
+                                return Container(
+                                  alignment: AlignmentDirectional.center,
+                                  child: Text(
+                                    field.value?.join(', ') ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    maxLines: 1,
+                                  ),
+                                );
+                              }).toList();
+                            },
+                          );
+                        },
+                        name: 'monthDays',
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -356,7 +297,7 @@ class FormBuilderMultiDropdown<T> extends StatelessWidget {
     required this.label,
     this.onChanged,
   });
-  final List<T> items;
+  final List<DropdownMenuItem<T>> items;
   final String name;
   final String label;
   final ValueChanged<List<T>>? onChanged;
@@ -369,49 +310,43 @@ class FormBuilderMultiDropdown<T> extends StatelessWidget {
         return DropdownButton2(
           isExpanded: true,
           hint: Text(label),
-          items: items
-              .map(
-                (e) => DropdownMenuItem(
-                  value: e,
-                  child: StatefulBuilder(
-                    builder: (context, menuSetState) {
-                      final isSelected = selectedItems.contains(e);
-                      return InkWell(
-                        onTap: () {
-                          isSelected
-                              ? selectedItems.remove(e)
-                              : selectedItems.add(e);
-                          //This rebuilds the StatefulWidget to update the button's text
-                          field.didChange(selectedItems);
-                          onChanged?.call(selectedItems);
-                          //This rebuilds the dropdownMenu Widget to update the check mark
-                          menuSetState(() {});
-                        },
-                        child: Container(
-                          height: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            children: [
-                              if (isSelected)
-                                const Icon(Icons.check_box_outlined)
-                              else
-                                const Icon(Icons.check_box_outline_blank),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  e.toString(),
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+          items: items.map((e) {
+            final item = e.value;
+            return DropdownMenuItem(
+              value: item,
+              child: StatefulBuilder(
+                builder: (context, menuSetState) {
+                  final isSelected = selectedItems.contains(item);
+                  return InkWell(
+                    onTap: () {
+                      isSelected
+                          ? selectedItems.remove(item)
+                          : selectedItems.add(item!);
+                      //This rebuilds the StatefulWidget to update the button's text
+                      field.didChange(selectedItems);
+                      onChanged?.call(selectedItems);
+                      //This rebuilds the dropdownMenu Widget to update the check mark
+                      menuSetState(() {});
                     },
-                  ),
-                ),
-              )
-              .toList(),
+                    child: Container(
+                      height: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          if (isSelected)
+                            const Icon(Icons.check_box_outlined)
+                          else
+                            const Icon(Icons.check_box_outline_blank),
+                          const SizedBox(width: 16),
+                          Expanded(child: e.child),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }).toList(),
           value: selectedItems.isEmpty ? null : selectedItems.last,
           onChanged: (value) {},
           selectedItemBuilder: (context) {

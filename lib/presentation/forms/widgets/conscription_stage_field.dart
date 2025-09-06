@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:paseban/core/constant/space.dart';
-import 'package:paseban/domain/models/models.dart';
+
+import '../../../domain/enums.dart';
 
 class ConscriptionStageField<T> extends StatefulWidget {
   const ConscriptionStageField({

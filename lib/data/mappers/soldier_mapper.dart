@@ -6,7 +6,7 @@ import '../../domain/enums.dart';
 extension SoldierToCompanion on Soldier {
   SoldiersTableCompanion toCompanion() {
     return SoldiersTableCompanion(
-      id: id == null ? const Value.absent() : Value(id!),
+      id: Value.absentIfNull(id),
       firstName: Value(firstName),
       lastName: Value(lastName),
       rank: Value(rank),

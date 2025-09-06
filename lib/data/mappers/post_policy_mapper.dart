@@ -30,7 +30,7 @@ extension PostPolicyToCompanion on PostPolicy {
         map = {'count': value};
         break;
 
-      case MinPostCount(:final value, :final stagePriority):
+      case MinPostCountPerMonth(:final value, :final stagePriority):
         map = {
           'value': value,
           'stagePriority': stagePriority?.map(
@@ -39,7 +39,7 @@ extension PostPolicyToCompanion on PostPolicy {
         };
         break;
 
-      case MaxPostCount(:final value, :final stagePriority):
+      case MaxPostCountPerMonth(:final value, :final stagePriority):
         map = {
           'value': value,
           'stagePriority': stagePriority?.map(
@@ -72,17 +72,14 @@ extension PostPolicyToCompanion on PostPolicy {
           ),
         };
         break;
-
-      default:
-        map = null;
     }
-    ;
+
     return PostPoliciesTableCompanion(
       id: Value.absentIfNull(id),
       soldierId: Value.absentIfNull(soldierId),
       priority: Value(priority.index),
       type: Value(runtimeType.toString()),
-      data: Value.absentIfNull(map == null ? null : jsonEncode(map)),
+      data: Value.absentIfNull(jsonEncode(map)),
     );
   }
 }
@@ -143,8 +140,8 @@ extension PostPolicyFromDb on PostPoliciesTableData {
           priority: Priority.values[priority],
         );
 
-      case 'MinPostCount':
-        return MinPostCount(
+      case 'MinPostCountPerMonth':
+        return MinPostCountPerMonth(
           id: id,
           soldierId: soldierId,
           value: map['value'],
@@ -155,8 +152,8 @@ extension PostPolicyFromDb on PostPoliciesTableData {
           ),
         );
 
-      case 'MaxPostCount':
-        return MaxPostCount(
+      case 'MaxPostCountPerMonth':
+        return MaxPostCountPerMonth(
           id: id,
           soldierId: soldierId,
           value: map['value'],

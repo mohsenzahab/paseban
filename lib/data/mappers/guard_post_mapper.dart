@@ -3,31 +3,32 @@ import '../db/app_database.dart';
 import '../../domain/models/guard_post.dart';
 import '../../domain/enums.dart';
 
-extension GuardPostToCompanion on GuardPost {
+extension GuardPostToCompanion on RawGuardPost {
   GuardPostsTableCompanion toCompanion() {
     return GuardPostsTableCompanion(
-      id: id == null ? const Value.absent() : Value(id!),
+      id: Value.absentIfNull(id),
       title: Value(title),
       difficulty: Value(difficulty),
-
       shiftsPerDay: Value(shiftsPerDay),
-      monthDays: Value(monthDays),
-      weekDays: Value(weekDays),
-      repeat: Value(repeat),
+      monthDays: Value.absentIfNull(monthDays),
+      weekDays: Value.absentIfNull(weekDays),
+      repeat: Value(periodRepeat),
+      periodStartDate: Value.absentIfNull(periodStartDate),
     );
   }
 }
 
 extension GuardPostFromDb on GuardPostsTableData {
-  GuardPost toDomain() {
-    return GuardPost(
+  RawGuardPost toDomain() {
+    return RawGuardPost(
       id: id,
       title: title,
       difficulty: GuardPostDifficulty.values[difficulty.index],
       shiftsPerDay: shiftsPerDay,
       monthDays: monthDays,
       weekDays: weekDays,
-      repeat: repeat,
+      periodRepeat: repeat,
+      periodStartDate: periodStartDate,
     );
   }
 }
