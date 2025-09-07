@@ -1,17 +1,14 @@
-name: Build Flutter Desktop Apps
+name: Build Flutter Windows App
 
 on:
-  workflow_dispatch: # manual trigger
+  workflow_dispatch: # manual trigger from GitHub UI
   push:
     branches:
-      - main  # adjust if needed
+      - main  # change if you use a different branch
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -22,50 +19,17 @@ jobs:
         with:
           flutter-version: 'stable'
 
-      - name: Enable desktop platforms
-        run: |
-          flutter config --enable-linux-desktop
-          flutter config --enable-windows-desktop || true
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build release
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            flutter build linux --release
-          else
-            flutter build windows --release
-          fi
-        shell: bash
+      - name: Build Windows release
+        run: flutter build windows --release
 
-      - name: Extract app name and version
-        id: version
-        shell: bash
-        run: |
-          APP_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
-          APP_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
-          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-          echo "App name: $APP_NAME"
-          echo "App version: $APP_VERSION"
-
-      - name: Package artifact
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            cd build/linux/x64/release/bundle
-            zip -r ../../../${{ env.APP_NAME }}-${{ env.APP_VERSION }}-linux.zip *
-          else
-            cd build/windows/runner/Release
-            powershell Compress-Archive -Path * -DestinationPath ../../../${{ env.APP_NAME }}-${{ env.APP_VERSION }}-windows.zip
-          fi
-        shell: bash
-
-      - name: Upload artifact
+      - name: Upload Windows exe
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-${{ env.APP_VERSION }}-${{ matrix.os == 'ubuntu-latest' && 'linux' || 'windows' }}
-          path: |
-            build/${{ env.APP_NAME }}-${{ env.APP_VERSION }}-linux.zip
-            build/${{ env.APP_NAME }}-${{ env.APP_VERSION }}-windows.zip
-          if-no-files-found: ignore
+          name: Windows-Build
+          path: build/windows/runner/Release/
