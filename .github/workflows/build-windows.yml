@@ -1,35 +1,52 @@
-name: Build Flutter Windows App
+# This workflow builds a Windows release for your Flutter project.
+#
+# To use this workflow, create a file named `windows_release.yml`
+# inside the `.github/workflows/` directory in your repository.
 
+name: Flutter Windows Release
+
+# Controls when the workflow will run
 on:
-  workflow_dispatch: # manual trigger from GitHub UI
+  # Triggers the workflow on push events but only for the "main" branch
   push:
-    branches:
-      - main  # change if you use a different branch
+    branches: [ "main" ]
+    
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-windows:
+    # The type of runner that the job will run on
     runs-on: windows-latest
 
     steps:
+      # 1. Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Flutter
+      # 2. Sets up the Flutter SDK environment
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.8.1
+          channel: 'stable' # Or 'beta', 'dev', 'master'
+          flutter-version: '3.x' # Specify a version if needed, e.g., '3.19.0'
 
-      - name: Enable Windows desktop
+      # 3. Ensures the Windows desktop build tooling is enabled
+      - name: Enable Windows desktop support
         run: flutter config --enable-windows-desktop
 
-      - name: Get dependencies
+      # 4. Gets all the Flutter packages required for the project
+      - name: Get Flutter dependencies
         run: flutter pub get
 
+      # 5. Builds the Windows release executable
       - name: Build Windows release
         run: flutter build windows --release
 
-      - name: Upload Windows exe
+      # 6. Packages the release build into a zip file
+      - name: Archive Release
         uses: actions/upload-artifact@v4
         with:
-          name: Windows-Build
-          path: build/windows/runner/Release/
+          name: windows-release-build
+          path: build/windows/x64/runner/Release/
+          if-no-files-found: error # Fails the workflow if the build directory is empty
