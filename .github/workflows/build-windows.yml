@@ -1,10 +1,10 @@
 name: Build Flutter Desktop Apps
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # manual trigger
   push:
     branches:
-      - main
+      - main  # adjust if needed
 
 jobs:
   build:
@@ -53,36 +53,19 @@ jobs:
       - name: Package artifact
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            # Generic Linux ZIP
             cd build/linux/x64/release/bundle
             zip -r ../../../${{ env.APP_NAME }}-${{ env.APP_VERSION }}-linux.zip *
+          else
+            cd build/windows/runner/Release
+            powershell Compress-Archive -Path * -DestinationPath ../../../${{ env.APP_NAME }}-${{ env.APP_VERSION }}-windows.zip
+          fi
+        shell: bash
 
-            # Arch/Manjaro Package
-            cd ../../../..
-            mkdir -p pkgbuild/${{ env.APP_NAME }}
-            cd pkgbuild/${{ env.APP_NAME }}
-
-            # Create PKGBUILD
-            cat <<EOF > PKGBUILD
-pkgname=${{ env.APP_NAME }}
-pkgver=${{ env.APP_VERSION }}
-pkgrel=1
-arch=('x86_64')
-pkgdesc="Flutter app ${{ env.APP_NAME }}"
-license=('unknown')
-depends=()
-source=("../build/linux/x64/release/bundle")
-sha256sums=('SKIP')
-
-package() {
-  install -d "\$pkgdir/usr/bin"
-  install -d "\$pkgdir/opt/\$pkgname"
-  cp -r ../build/linux/x64/release/bundle/* "\$pkgdir/opt/\$pkgname/"
-  ln -s "/opt/\$pkgname/${{ env.APP_NAME }}" "\$pkgdir/usr/bin/${{ env.APP_NAME }}"
-}
-EOF
-
-            # Build Arch package
-            makepkg -sf --noconfirm --skipchecksums
-
-            mv *.pkg.*
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ env.APP_VERSION }}-${{ matrix.os == 'ubuntu-latest' && 'linux' || 'windows' }}
+          path: |
+            build/${{ env.APP_NAME }}-${{ env.APP_VERSION }}-linux.zip
+            build/${{ env.APP_NAME }}-${{ env.APP_VERSION }}-windows.zip
+          if-no-files-found: ignore
