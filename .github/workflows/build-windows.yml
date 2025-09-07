@@ -1,0 +1,88 @@
+name: Build Flutter Desktop Apps
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Enable desktop platforms
+        run: |
+          flutter config --enable-linux-desktop
+          flutter config --enable-windows-desktop || true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build release
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            flutter build linux --release
+          else
+            flutter build windows --release
+          fi
+        shell: bash
+
+      - name: Extract app name and version
+        id: version
+        shell: bash
+        run: |
+          APP_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
+          APP_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          echo "App name: $APP_NAME"
+          echo "App version: $APP_VERSION"
+
+      - name: Package artifact
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            # Generic Linux ZIP
+            cd build/linux/x64/release/bundle
+            zip -r ../../../${{ env.APP_NAME }}-${{ env.APP_VERSION }}-linux.zip *
+
+            # Arch/Manjaro Package
+            cd ../../../..
+            mkdir -p pkgbuild/${{ env.APP_NAME }}
+            cd pkgbuild/${{ env.APP_NAME }}
+
+            # Create PKGBUILD
+            cat <<EOF > PKGBUILD
+pkgname=${{ env.APP_NAME }}
+pkgver=${{ env.APP_VERSION }}
+pkgrel=1
+arch=('x86_64')
+pkgdesc="Flutter app ${{ env.APP_NAME }}"
+license=('unknown')
+depends=()
+source=("../build/linux/x64/release/bundle")
+sha256sums=('SKIP')
+
+package() {
+  install -d "\$pkgdir/usr/bin"
+  install -d "\$pkgdir/opt/\$pkgname"
+  cp -r ../build/linux/x64/release/bundle/* "\$pkgdir/opt/\$pkgname/"
+  ln -s "/opt/\$pkgname/${{ env.APP_NAME }}" "\$pkgdir/usr/bin/${{ env.APP_NAME }}"
+}
+EOF
+
+            # Build Arch package
+            makepkg -sf --noconfirm --skipchecksums
+
+            mv *.pkg.*
