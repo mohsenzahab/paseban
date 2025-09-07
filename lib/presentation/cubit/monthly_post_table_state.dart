@@ -6,6 +6,7 @@ class MonthlyPostTableState extends BlocState {
     required this.soldiers,
     required this.guardPosts,
     required this.soldiersPosts,
+    this.previewSoldiersPosts,
     required this.publicPolicies,
     required this.soldierPolicies,
     required this.holidays,
@@ -15,6 +16,7 @@ class MonthlyPostTableState extends BlocState {
 
   const MonthlyPostTableState.initial()
     : soldiersPosts = const {},
+      previewSoldiersPosts = null,
       guardPosts = const {},
       soldiers = const {},
       soldierPolicies = const {},
@@ -49,6 +51,7 @@ class MonthlyPostTableState extends BlocState {
 
   /// each map contains the post id as key and the SoldierPost object as value
   final Map<int, Map<DateTime, SoldierPost>> soldiersPosts;
+  final Map<int, Map<DateTime, SoldierPost>>? previewSoldiersPosts;
 
   /// each map contains the post id as key and the GuardPost object as value
   final Map<int, RawGuardPost> guardPosts;
@@ -75,13 +78,15 @@ class MonthlyPostTableState extends BlocState {
       );
 
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
     guardPosts,
     soldiersPosts,
+    previewSoldiersPosts,
     soldiers,
     publicPolicies,
     soldierPolicies,
     holidays,
+    _dateRange,
   ];
 
   @override
@@ -113,7 +118,7 @@ class MonthlyPostTableState extends BlocState {
     );
   }
 
-  MonthlyPostTableState copyWithPosts(
+  MonthlyPostTableState copyWithPreviewPosts(
     Map<int, Map<DateTime, SoldierPost>> posts,
   ) {
     return MonthlyPostTableState._(
@@ -121,7 +126,8 @@ class MonthlyPostTableState extends BlocState {
       message: message,
       soldiers: soldiers,
       guardPosts: guardPosts,
-      soldiersPosts: posts,
+      previewSoldiersPosts: posts,
+      soldiersPosts: soldiersPosts,
       publicPolicies: publicPolicies,
       soldierPolicies: soldierPolicies,
       holidays: holidays,

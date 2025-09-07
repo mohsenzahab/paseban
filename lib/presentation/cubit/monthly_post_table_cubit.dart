@@ -272,7 +272,17 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
       soldierPolicies: state.soldierPolicies,
       holidays: state.holidays,
       dateRange: state.dateRange,
+      initialSchedule: state.soldiersPosts,
     ).generate();
-    emit(state.copyWithPosts(result));
+    emit(state.copyWithPreviewPosts(result));
+  }
+
+  void setDateRange(DateTime start, DateTime end) {
+    emit(
+      state.copyWith(
+        BlocStatus.ready,
+        dateRange: DateTimeRange(start: start.dateOnly, end: end.dateOnly),
+      ),
+    );
   }
 }

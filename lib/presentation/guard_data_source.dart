@@ -13,7 +13,7 @@ bool isHoliday(DateTime i, MonthlyPostTableState state) {
 }
 
 Color cellColor(bool isHoliday) {
-  return isHoliday ? kColorHoliday : Colors.white;
+  return isHoliday ? kColorHoliday : Colors.transparent;
 }
 
 const kColorHoliday = Colors.redAccent;
@@ -21,13 +21,13 @@ const kColorHoliday = Colors.redAccent;
 class GuardDataSource extends DataGridSource {
   GuardDataSource(List<Soldier> guards, this.state) {
     final range = state.dateRange;
-
+    final soldiersPosts = state.previewSoldiersPosts ?? state.soldiersPosts;
     soldiers =
         (guards..sort(
               (a, b) => a.dateOfEnlistment.compareTo(b.dateOfEnlistment),
             ))
             .map((soldier) {
-              final soldierPosts = state.soldiersPosts[soldier.id] ?? {};
+              final soldierPosts = soldiersPosts[soldier.id] ?? {};
 
               final cells = [
                 DataGridCell<String>(
@@ -65,8 +65,8 @@ class GuardDataSource extends DataGridSource {
   ) {
     newCellValue = null;
     final guardPosts = state.guardPosts;
-    final Soldier soldier = dataGridRow.getCells()[0].value;
-    final soldierPosts = state.soldiersPosts[soldier.id] ?? {};
+    final Soldier soldier = dataGridRow.getCells()[1].value;
+    // final soldierPosts = state.soldiersPosts[soldier.id] ?? {};
     final SoldierPost? value = dataGridRow
         .getCells()[rowColumnIndex.columnIndex]
         .value;
@@ -155,10 +155,18 @@ class GuardDataSource extends DataGridSource {
         } else if (value is SoldierPost) {
           return Container(
             color: color,
-
             alignment: Alignment.center,
-            padding: const EdgeInsets.all(8.0),
-            child: Text(state.guardPosts[value.guardPostId]!.title),
+            // padding: const EdgeInsets.all(8.0),
+            child: FittedBox(
+              child: Row(
+                children: [
+                  (value.editType == EditType.manual
+                      ? Icon(Icons.mode_edit)
+                      : Icon(Icons.auto_awesome_rounded)),
+                  Text(state.guardPosts[value.guardPostId]!.title),
+                ],
+              ),
+            ),
           );
         } else if (value is String) {
           return Container(

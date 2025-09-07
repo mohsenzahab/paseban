@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl_date_picker/intl_date_picker.dart';
 import 'package:paseban/app/locator.dart';
 import 'package:paseban/core/bloc/widgets/bloc_message_listener.dart';
 import 'package:paseban/presentation/cubit/monthly_post_table_cubit.dart';
@@ -7,6 +8,7 @@ import 'package:paseban/presentation/guard_data_source.dart';
 import 'package:paseban/presentation/policies_screen.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
+import '../core/utils/calendar/jalali_delegate.dart';
 import '../core/utils/date_helper.dart';
 import '../domain/models/soldier.dart';
 import 'forms/soldier_form.dart';
@@ -56,6 +58,61 @@ class PostTableScreen extends StatelessWidget {
             },
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(kToolbarHeight),
+          child: BlocBuilder<MonthlyPostTableCubit, MonthlyPostTableState>(
+            // buildWhen: (previous, current) =>
+            //     previous.dateRange != current.dateRange,
+            builder: (context, state) {
+              final range = state.dateRange;
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  return Row(
+                    children: [
+                      OutlinedButton(
+                        onPressed: () {
+                          showIntlDatePicker(
+                            context: context,
+                            firstDate: DateTime(DateTime.now().year, 6, 1),
+                            lastDate: DateTime.now().copyWith(day: 30),
+                            initialDate: DateTime.now(),
+                            calendarMode: Calendar.jalali,
+                          ).then((value) {
+                            if (value != null) {
+                              context
+                                  .read<MonthlyPostTableCubit>()
+                                  .setDateRange(value, range.end);
+                            }
+                          });
+                        },
+                        child: Text(formatJalaliCompactDate(range.start)),
+                      ),
+                      Text(' تا '),
+                      OutlinedButton(
+                        onPressed: () {
+                          showIntlDatePicker(
+                            context: context,
+                            firstDate: DateTime(DateTime.now().year, 6, 1),
+                            lastDate: DateTime.now().copyWith(day: 30),
+                            initialDate: DateTime.now(),
+                            calendarMode: Calendar.jalali,
+                          ).then((value) {
+                            if (value != null) {
+                              context
+                                  .read<MonthlyPostTableCubit>()
+                                  .setDateRange(range.start, value);
+                            }
+                          });
+                        },
+                        child: Text(formatJalaliCompactDate(range.end)),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ),
       ),
       body: BlocMessageListener.group(
         blocs: [sl<MonthlyPostTableCubit>()],

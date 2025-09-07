@@ -22,6 +22,7 @@ class GuardScheduler {
   final Set<DateTime> holidays;
   final DateTimeRange dateRange;
   final int optimizationIterations;
+  final Map<int, Map<DateTime, SoldierPost>> initialSchedule;
 
   // Internal state
   late Map<int, Map<DateTime, SoldierPost>> _schedule;
@@ -30,13 +31,16 @@ class GuardScheduler {
   late Map<int, Set<DateTime>> _leaveDays;
 
   GuardScheduler({
+    required this.initialSchedule,
     required this.soldiers,
     required this.guardPosts,
     required this.publicPolicies,
     required this.soldierPolicies,
     required this.holidays,
     required this.dateRange,
-    this.optimizationIterations = 5000, // Number of optimization swaps to try
+    this.optimizationIterations = 5000,
+
+    // Number of optimization swaps to try
   });
 
   /// Generates the guard schedule.
@@ -58,9 +62,18 @@ class GuardScheduler {
     _allSoldierPolicies = {};
     _leaveDays = {};
 
+    initialSchedule.forEach((soldierId, posts) {
+      posts.forEach((date, post) {
+        if (post.editType == EditType.manual) {
+          // _manualPosts.add(post);
+          _schedule[soldierId]![date] = post;
+        }
+      });
+    });
+
     // Combine public and specific policies for easy access
     for (final soldierId in soldiers.keys) {
-      _allSoldierPolicies[soldierId!] = [
+      _allSoldierPolicies[soldierId] = [
         ...publicPolicies,
         ...(soldierPolicies[soldierId] ?? []),
       ];
@@ -102,17 +115,30 @@ class GuardScheduler {
   void _phase2_initialAllocation() {
     print("  PHASE 2: Creating initial schedule (Greedy Allocation)...");
 
+    o:
     for (final slot in _availableSlots) {
       double bestScore = double.infinity;
       int? bestSoldierId;
+      final dateOnly = DateUtils.dateOnly(slot.date);
+      bool isManuallyEdited = false;
 
       // Find all available soldiers for this slot
       final candidateIds = soldiers.keys.where((id) {
-        final dateOnly = DateUtils.dateOnly(slot.date);
+        isManuallyEdited =
+            _schedule[id]?[dateOnly]?.editType == EditType.manual;
+        if (isManuallyEdited) return false;
         final isOnLeave = _leaveDays[id]?.contains(dateOnly) ?? false;
         final isAlreadyPosted = _schedule[id]?.containsKey(dateOnly) ?? false;
+
         return !isOnLeave && !isAlreadyPosted;
       });
+
+      if (isManuallyEdited) {
+        print(
+          "    - Skipping ${slot.post.title} on ${slot.date} (manually edited)",
+        );
+        continue;
+      }
 
       if (candidateIds.isEmpty) {
         print(
@@ -409,6 +435,7 @@ class GuardScheduler {
               soldierId: e.key,
               guardPostId: v.value.guardPostId,
               date: v.key,
+              editType: v.value.editType,
             ),
           ),
         )
@@ -432,7 +459,11 @@ class GuardScheduler {
 
       // Simple swap: soldierA does soldierB's post, and vice versa.
       // This only works if their posts were on different days.
-      if (assignmentA.date == assignmentB.date) continue;
+      if (assignmentA.date == assignmentB.date ||
+          assignmentA.editType == EditType.manual ||
+          assignmentB.editType == EditType.manual) {
+        continue;
+      }
 
       // Create a temporary schedule with the swap
       var tempSchedule = _copySchedule(_schedule);
@@ -446,13 +477,13 @@ class GuardScheduler {
         soldierId: assignmentA.soldierId,
         guardPostId: assignmentB.guardPostId,
         date: assignmentB.date,
-        editType: EditType.auto,
+        editType: assignmentB.editType,
       );
       tempSchedule[assignmentB.soldierId]![assignmentA.date] = SoldierPost(
         soldierId: assignmentB.soldierId,
         guardPostId: assignmentA.guardPostId,
         date: assignmentA.date,
-        editType: EditType.auto,
+        editType: assignmentA.editType,
       );
 
       // Check if the swap is valid (e.g., doesn't violate leave)
@@ -474,11 +505,13 @@ class GuardScheduler {
           soldierId: assignmentA.soldierId,
           guardPostId: assignmentB.guardPostId,
           date: assignmentB.date,
+          editType: assignmentB.editType,
         );
         allAssignments[indexB] = SoldierPost(
           soldierId: assignmentB.soldierId,
           guardPostId: assignmentA.guardPostId,
           date: assignmentA.date,
+          editType: assignmentA.editType,
         );
       }
     }
@@ -538,116 +571,5 @@ class GuardScheduler {
       newMap[entry.key] = Map<DateTime, SoldierPost>.from(entry.value);
     }
     return newMap;
-  }
-}
-
-// =========================================================================
-// EXAMPLE USAGE
-// =========================================================================
-void main() async {
-  // 1. Define Soldiers
-  final soldiers = {
-    1: Soldier(
-      id: 1,
-      firstName: 'علی',
-      lastName: 'رضایی',
-      rank: MilitaryRank.private,
-      dateOfEnlistment: DateTime(2024, 3, 1),
-    ), // Senior
-    2: Soldier(
-      id: 2,
-      firstName: 'محمد',
-      lastName: 'حسینی',
-      rank: MilitaryRank.private,
-      dateOfEnlistment: DateTime(2025, 6, 1),
-    ), // Junior
-    3: Soldier(
-      id: 3,
-      firstName: 'سینا',
-      lastName: 'احمدی',
-      rank: MilitaryRank.private,
-      dateOfEnlistment: DateTime(2025, 8, 1),
-    ), // Recruit
-    4: Soldier(
-      id: 4,
-      firstName: 'پویا',
-      lastName: 'مرادی',
-      rank: MilitaryRank.private,
-      dateOfEnlistment: DateTime(2025, 1, 1),
-    ), // Intermediate
-  };
-
-  // 2. Define Guard Posts
-  final guardPosts = {
-    101: RawGuardPost(
-      id: 101,
-      title: 'برجک شمالی',
-      difficulty: GuardPostDifficulty.hard,
-      shiftsPerDay: 2,
-    ),
-    102: RawGuardPost(
-      id: 102,
-      title: 'دژبانی',
-      difficulty: GuardPostDifficulty.easy,
-      shiftsPerDay: 3,
-      weekDays: [
-        [Weekday.saturday, Weekday.monday, Weekday.wednesday, Weekday.friday],
-      ],
-    ),
-  };
-
-  // 3. Define Policies
-  final publicPolicies = <PostPolicy>[
-    MaxPostCountPerMonth(value: 12, priority: Priority.medium),
-    NoNightNNight(value: 1, priority: Priority.veryHigh), // قانون یک شب در میان
-  ];
-
-  final soldierPolicies = {
-    3: [
-      Leave(
-        soldierId: 3,
-        value: DateTimeRange(
-          start: DateTime(2025, 9, 5),
-          end: DateTime(2025, 9, 8),
-        ),
-      ),
-    ],
-  };
-
-  // 4. Define Date Range
-  final dateRange = DateTimeRange(
-    start: DateTime(2025, 9, 1),
-    end: DateTime(2025, 9, 30),
-  );
-
-  // 5. Create and Run Scheduler
-  final scheduler = GuardScheduler(
-    soldiers: soldiers,
-    guardPosts: guardPosts,
-    publicPolicies: publicPolicies,
-    soldierPolicies: soldierPolicies,
-    holidays: {},
-    dateRange: dateRange,
-    optimizationIterations: 10000, // More iterations can yield better results
-  );
-
-  final generatedSchedule = await scheduler.generate();
-
-  // 6. Print the results
-  print("\n--- FINAL SCHEDULE ---");
-  final sortedSoldierIds = generatedSchedule.keys;
-  for (final soldierId in sortedSoldierIds) {
-    final soldier = soldiers[soldierId]!;
-    final posts = generatedSchedule[soldierId]!.values.toList()
-      ..sortBy((p) => p.date);
-    print(
-      "\n📅 Soldier: ${soldier.firstName} ${soldier.lastName} (${posts.length} posts)",
-    );
-    for (final post in posts) {
-      final postInfo = guardPosts[post.guardPostId]!;
-      print(
-        "  - ${post.date.toIso8601String().substring(0, 10)}: ${postInfo.title}",
-      );
-    }
   }
 }
