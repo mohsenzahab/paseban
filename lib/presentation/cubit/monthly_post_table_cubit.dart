@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
@@ -158,7 +159,19 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
         DateTimeRange(start: state.dateRange.start, end: state.dateRange.end),
       );
       log('Getting soldier posts');
-      emit(state.copyWith(BlocStatus.ready, posts: posts));
+      final prevPosts = state.previewSoldiersPosts == null
+          ? null
+          : Map<int, Map<DateTime, SoldierPost>>.from(
+              state.previewSoldiersPosts!,
+            );
+      prevPosts?[post.soldierId]?[post.date] = post;
+      emit(
+        state.copyWith(
+          BlocStatus.ready,
+          posts: posts,
+          previewSoldiersPosts: prevPosts,
+        ),
+      );
       // addSuccess('سیاست ویرایش شد');
     } else {
       addError('ویرایش پست ناموفق ');
@@ -284,5 +297,51 @@ class MonthlyPostTableCubit extends Cubit<MonthlyPostTableState>
         dateRange: DateTimeRange(start: start.dateOnly, end: end.dateOnly),
       ),
     );
+  }
+
+  void savePreviewPosts() async {
+    handleError(() async {
+      await soldierPostRepository.insertAll(
+        state.previewSoldiersPosts!.entries
+            .expand((e) => e.value.values)
+            .toList(),
+      );
+      final posts = await soldierPostRepository.getSoldierPostsFromRange(
+        DateTimeRange(start: state.dateRange.start, end: state.dateRange.end),
+      );
+      emit(state.copyWith(BlocStatus.ready, posts: posts));
+    });
+  }
+
+  void clearPreviewPosts() {
+    emit(state.copyWithPreviewPosts(null));
+  }
+
+  void clearAllPosts() async {
+    await soldierPostRepository.deleteAll();
+    final posts = await soldierPostRepository.getSoldierPostsFromRange(
+      DateTimeRange(start: state.dateRange.start, end: state.dateRange.end),
+    );
+    emit(
+      state.copyWith(BlocStatus.ready, posts: posts).copyWithPreviewPosts(null),
+    );
+  }
+
+  void deleteAllAutoPosts() async {
+    await soldierPostRepository.deleteAllAutoPosts();
+    final posts = await soldierPostRepository.getSoldierPostsFromRange(
+      DateTimeRange(start: state.dateRange.start, end: state.dateRange.end),
+    );
+    emit(
+      state.copyWith(BlocStatus.ready, posts: posts).copyWithPreviewPosts(null),
+    );
+  }
+
+  void handleError(FutureOr<void> Function() action) async {
+    try {
+      await action();
+    } catch (e) {
+      addError(e);
+    }
   }
 }

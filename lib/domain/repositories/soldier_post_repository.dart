@@ -4,11 +4,16 @@ import 'package:paseban/data/mappers/soldier_post_mapper.dart';
 import 'package:paseban/domain/models/soldier_post.dart';
 
 import '../../data/db/app_database.dart';
+import '../enums.dart';
 
 class SoldierPostRepository {
   final AppDatabase db;
 
   SoldierPostRepository(this.db);
+
+  Future<void> insertAll(List<SoldierPost> posts) {
+    return db.soldierPostsTable.insertAll(posts.map((e) => e.toCompanion()));
+  }
 
   Future<int> insert(SoldierPost post) {
     return db
@@ -33,5 +38,15 @@ class SoldierPostRepository {
           ]),
         ))
         .go();
+  }
+
+  Future<void> deleteAll() async {
+    await db.delete(db.soldierPostsTable).go();
+  }
+
+  Future<void> deleteAllAutoPosts() async {
+    await (db.delete(
+      db.soldierPostsTable,
+    )..where((tbl) => tbl.editType.isValue(EditType.auto.index))).go();
   }
 }

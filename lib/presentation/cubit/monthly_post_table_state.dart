@@ -96,6 +96,7 @@ class MonthlyPostTableState extends BlocState {
     List<RawGuardPost>? guardPosts,
     List<PostPolicy>? policies,
     List<SoldierPost>? posts,
+    Map<int, Map<DateTime, SoldierPost>>? previewSoldiersPosts,
     List<DateTime>? holidays,
     DateTimeRange? dateRange,
     String? message,
@@ -115,11 +116,12 @@ class MonthlyPostTableState extends BlocState {
       soldierPolicies: soldierPolicies,
       holidays: holidays?.toSet() ?? this.holidays,
       dateRange: dateRange ?? _dateRange,
+      previewSoldiersPosts: previewSoldiersPosts ?? this.previewSoldiersPosts,
     );
   }
 
   MonthlyPostTableState copyWithPreviewPosts(
-    Map<int, Map<DateTime, SoldierPost>> posts,
+    Map<int, Map<DateTime, SoldierPost>>? posts,
   ) {
     return MonthlyPostTableState._(
       status,

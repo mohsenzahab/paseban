@@ -8,6 +8,7 @@ import 'package:paseban/presentation/guard_data_source.dart';
 import 'package:paseban/presentation/policies_screen.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
+import '../core/constant/space.dart';
 import '../core/utils/calendar/jalali_delegate.dart';
 import '../core/utils/date_helper.dart';
 import '../domain/models/soldier.dart';
@@ -29,7 +30,42 @@ class PostTableScreen extends StatelessWidget {
             onPressed: () {
               context.read<MonthlyPostTableCubit>().runScheduler();
             },
-            child: Text('چیدن'),
+            child: Icon(Icons.auto_awesome_rounded),
+          ),
+          kSpaceH12,
+
+          FilledButton(
+            onPressed: () {
+              context.read<MonthlyPostTableCubit>().deleteAllAutoPosts();
+            },
+            child: Row(
+              children: [
+                Icon(Icons.auto_awesome_rounded),
+                kSpaceH8,
+                Icon(Icons.delete),
+              ],
+            ),
+          ),
+          kSpaceH12,
+          FilledButton(
+            onPressed: () {
+              context.read<MonthlyPostTableCubit>().clearPreviewPosts();
+            },
+            child: Icon(Icons.restart_alt_rounded),
+          ),
+          kSpaceH12,
+          FilledButton(
+            onPressed: () {
+              context.read<MonthlyPostTableCubit>().clearAllPosts();
+            },
+            child: Icon(Icons.clear_rounded),
+          ),
+          kSpaceH12,
+          FilledButton(
+            onPressed: () {
+              context.read<MonthlyPostTableCubit>().savePreviewPosts();
+            },
+            child: Icon(Icons.save),
           ),
           PopupMenuButton(
             itemBuilder: (context) {
